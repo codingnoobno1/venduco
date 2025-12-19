@@ -1,0 +1,11 @@
+// Shared Dashboard Components Index
+export { Sidebar } from './Sidebar'
+export { Header } from './Header'
+export { StatCard } from './StatCard'
+export { DataTable } from './DataTable'
+export { ProjectCard } from './ProjectCard'
+export { MachineCard } from './MachineCard'
+export { ActivityFeed } from './ActivityFeed'
+export { LoadingSkeleton } from './LoadingSkeleton'
+export { StatusBadge } from './StatusBadge'
+export { QuickAction } from './QuickAction'
