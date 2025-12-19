@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Step 3 API: Role-Specific Details
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Collaboration Invites API - Get my pending invites
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

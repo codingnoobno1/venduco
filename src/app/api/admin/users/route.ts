@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Admin API: Get pending verifications
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Step 2 API: Profile Setup
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

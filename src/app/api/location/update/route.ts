@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Location Update API - Receive GPS from MAUI/Mobile
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

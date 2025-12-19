@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Daily Plan Lock API - Freeze day's work
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // API Route: Get current user profile
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'

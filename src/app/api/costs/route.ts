@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Auto Cost Calculation API - For PM Costs
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

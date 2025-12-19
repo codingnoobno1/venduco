@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // In-App Notifications API - Gap 4 Fix
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

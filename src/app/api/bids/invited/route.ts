@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Invited Bids API - Get my bid invitations
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'

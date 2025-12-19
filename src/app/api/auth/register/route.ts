@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // API Route: User Registration
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'

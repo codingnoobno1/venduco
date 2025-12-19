@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // Step 1 API: Create Account
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
