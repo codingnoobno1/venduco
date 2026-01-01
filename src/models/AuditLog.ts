@@ -1,73 +1,41 @@
-// AuditLog Model - Record user actions and API changes
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema, Document } from 'mongoose';
 
 export enum AuditAction {
     CREATE = 'CREATE',
     UPDATE = 'UPDATE',
     DELETE = 'DELETE',
-    LOGIN = 'LOGIN',
-    LOGOUT = 'LOGOUT',
-    VIEW = 'VIEW',
-    EXPORT = 'EXPORT',
     APPROVE = 'APPROVE',
     REJECT = 'REJECT',
-    ASSIGN = 'ASSIGN',
-    UPLOAD = 'UPLOAD',
+    SUBMIT = 'SUBMIT'
 }
 
 export interface IAuditLog extends Document {
-    userId: string
-    userName: string
-    userRole?: string
-    action: AuditAction
-    entityType: string
-    entityId?: string
-    entityName?: string
-    description: string
-    changes?: {
-        before?: any
-        after?: any
-        fields?: string[]
-    }
-    ipAddress?: string
-    userAgent?: string
-    metadata?: Record<string, any>
-    timestamp: Date
-    createdAt: Date
+    userId: mongoose.Types.ObjectId;
+    action: string; // e.g., UPDATE_PROGRESS, APPROVE_INVOICE, RAISE_NCR
+    entityType: string; // e.g., 'Invoice', 'SectionProgress'
+    entityId: mongoose.Types.ObjectId;
+    oldValue?: any;
+    newValue?: any;
+    metadata?: Record<string, any>;
+    ipAddress?: string;
+    createdAt: Date;
 }
 
-const AuditLogSchema = new Schema<IAuditLog>(
-    {
-        userId: { type: String, required: true, index: true },
-        userName: { type: String, required: true },
-        userRole: { type: String },
-        action: {
-            type: String,
-            enum: Object.values(AuditAction),
-            required: true,
-        },
-        entityType: { type: String, required: true, index: true },
-        entityId: { type: String, index: true },
-        entityName: { type: String },
-        description: { type: String, required: true },
-        changes: {
-            before: Schema.Types.Mixed,
-            after: Schema.Types.Mixed,
-            fields: [String],
-        },
-        ipAddress: { type: String },
-        userAgent: { type: String },
-        metadata: { type: Schema.Types.Mixed },
-        timestamp: { type: Date, default: Date.now },
-    },
-    { timestamps: true }
-)
+const AuditLogSchema: Schema = new Schema({
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    action: { type: String, required: true },
+    entityType: { type: String, required: true },
+    entityId: { type: Schema.Types.ObjectId, required: true },
+    oldValue: { type: Schema.Types.Mixed },
+    newValue: { type: Schema.Types.Mixed },
+    metadata: { type: Map, of: Schema.Types.Mixed },
+    ipAddress: { type: String }
+}, {
+    timestamps: { createdAt: true, updatedAt: false },
+});
 
-AuditLogSchema.index({ userId: 1, timestamp: -1 })
-AuditLogSchema.index({ entityType: 1, entityId: 1, timestamp: -1 })
-AuditLogSchema.index({ action: 1, timestamp: -1 })
-// TTL - keep audit logs for 1 year
-AuditLogSchema.index({ timestamp: 1 }, { expireAfterSeconds: 31536000 })
+// Optimized for time-based audit forensics
+AuditLogSchema.index({ createdAt: -1 });
+AuditLogSchema.index({ entityId: 1, entityType: 1 });
 
-export const AuditLog = mongoose.models.AuditLog ||
-    mongoose.model<IAuditLog>('AuditLog', AuditLogSchema)
+export const AuditLog = mongoose.models.AuditLog || mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);

@@ -2,8 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { Project } from '@/models/Project'
-import { BidInvitation, InvitationStatus } from '@/models/BidInvitation'
+import { BidInvitation, InvitationStatus, InvitationType } from '@/models/BidInvitation'
 import { User } from '@/models/User'
+import { MemberRole } from '@/models/ProjectMember'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
 
 // GET list all invitations for a project
@@ -63,7 +64,7 @@ export async function POST(
         await dbConnect()
         const { projectId } = await params
         const body = await request.json()
-        const { vendorId, message, expiresAt } = body
+        const { vendorId, message, expiresAt, invitationType, targetRole } = body
 
         if (!vendorId) {
             return NextResponse.json(
@@ -97,7 +98,8 @@ export async function POST(
             )
         }
 
-        if (vendor.requestedRole !== 'VENDOR') {
+        // For BID, must be vendor. For MEMBER, can be anything except ADMIN
+        if ((invitationType === InvitationType.BID || !invitationType) && vendor.requestedRole !== 'VENDOR') {
             return NextResponse.json(
                 { success: false, error: 'INVALID', message: 'User is not a vendor' },
                 { status: 400 }
@@ -127,6 +129,8 @@ export async function POST(
             invitedBy: payload.userId,
             invitedByName: inviter?.name || 'Unknown',
             message,
+            invitationType: invitationType || InvitationType.BID,
+            targetRole: targetRole || MemberRole.VENDOR,
             status: InvitationStatus.PENDING,
             expiresAt: expiresAt ? new Date(expiresAt) : undefined,
         })

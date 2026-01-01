@@ -16,16 +16,23 @@ import {
     CheckCircle2,
     FileText,
     MessageSquare,
+    ShieldCheck,
 } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/shared/StatCard'
 import { StatusBadge } from '@/components/dashboard/shared/StatusBadge'
 import { LoadingSkeleton } from '@/components/dashboard/shared/LoadingSkeleton'
+import { ProgressLogger } from '@/components/dashboard/vendor/erp/ProgressLogger'
+import { InvoiceWizard } from '@/components/dashboard/vendor/erp/InvoiceWizard'
+import { ChainageVisualizer } from '@/components/dashboard/shared/ChainageVisualizer'
 
 export default function VendorProjectDetailPage({ params }: { params: Promise<{ projectId: string }> }) {
     const { projectId } = use(params)
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [project, setProject] = useState<any>(null)
+    const [sections, setSections] = useState<any[]>([])
+    const [activeTab, setActiveTab] = useState('overview')
+    const [user, setUser] = useState<any>(null)
 
     useEffect(() => {
         fetchProject()
@@ -33,6 +40,9 @@ export default function VendorProjectDetailPage({ params }: { params: Promise<{ 
 
     async function fetchProject() {
         const token = localStorage.getItem('token')
+        const userStr = localStorage.getItem('user')
+        if (userStr) setUser(JSON.parse(userStr))
+
         try {
             const res = await fetch(`/api/projects/${projectId}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -40,11 +50,25 @@ export default function VendorProjectDetailPage({ params }: { params: Promise<{ 
             const data = await res.json()
             if (data.success) {
                 setProject(data.data)
+                fetchSections()
             }
         } catch (error) {
             console.error('Failed to fetch:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function fetchSections() {
+        const token = localStorage.getItem('token')
+        try {
+            const res = await fetch(`/api/projects/${projectId}/sections`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = await res.json()
+            if (data.success) setSections(data.data)
+        } catch (err) {
+            console.error('Failed to fetch sections:', err)
         }
     }
 
@@ -59,6 +83,13 @@ export default function VendorProjectDetailPage({ params }: { params: Promise<{ 
     }
 
     const daysRemaining = Math.ceil((new Date(project.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+
+    const tabs = [
+        { key: 'overview', label: 'Overview' },
+        { key: 'execution', label: 'Daily Execution' },
+        { key: 'billing', label: 'Smart Billing' },
+        { key: 'team', label: 'Project Team' },
+    ]
 
     return (
         <div className="space-y-6">
@@ -84,7 +115,7 @@ export default function VendorProjectDetailPage({ params }: { params: Promise<{ 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <StatCard
-                    title="Progress"
+                    title="Your Progress"
                     value={`${project.progress || 0}%`}
                     icon={CheckCircle2}
                     color="green"
@@ -96,77 +127,112 @@ export default function VendorProjectDetailPage({ params }: { params: Promise<{ 
                     color={daysRemaining < 7 ? 'red' : 'blue'}
                 />
                 <StatCard
-                    title="Budget"
-                    value={`₹${(project.budget / 100000).toFixed(1)}L`}
+                    title="Pending Invoices"
+                    value={0}
                     icon={DollarSign}
                     color="purple"
                 />
                 <StatCard
-                    title="Pending Reports"
-                    value={project.pendingReports || 0}
-                    icon={FileText}
+                    title="Quality Gates"
+                    value={0}
+                    icon={ShieldCheck}
                     color="orange"
                 />
             </div>
 
-            {/* Progress Bar */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold">Project Progress</h3>
-                    <span className="text-2xl font-bold text-blue-600">{project.progress || 0}%</span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
-                    <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${project.progress || 0}%` }}
-                        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full"
-                    />
-                </div>
-                <div className="flex justify-between text-sm text-slate-500 mt-2">
-                    <span>0%</span>
-                    <span>50%</span>
-                    <span>100%</span>
-                </div>
+            {/* Tabs */}
+            <div className="border-b border-slate-200 dark:border-slate-700">
+                <nav className="flex gap-6">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </nav>
             </div>
 
-            {/* Project Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                    <h3 className="font-semibold mb-4">Project Information</h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <MapPin className="text-slate-400" size={18} />
-                            <div>
-                                <p className="text-sm text-slate-500">Location</p>
-                                <p className="font-medium">{project.location}</p>
+            {/* Tab Content */}
+            {activeTab === 'overview' && (
+                <div className="space-y-6">
+                    {/* Progress Bar */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-semibold">Project Overall Progress</h3>
+                            <span className="text-2xl font-bold text-blue-600">{project.progress || 0}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${project.progress || 0}%` }}
+                                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                            <CheckCircle2 size={18} className="text-blue-500" />
+                            <h3 className="font-bold">Physical Continuity Tracker</h3>
+                        </div>
+                        <div className="p-4 bg-slate-50/50 dark:bg-slate-900/50">
+                            <ChainageVisualizer sections={sections} />
+                        </div>
+                    </div>
+
+                    {/* Project Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                            <h3 className="font-semibold mb-4">Project Information</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <MapPin className="text-slate-400" size={18} />
+                                    <div>
+                                        <p className="text-sm text-slate-500">Location</p>
+                                        <p className="font-medium">{project.location}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Calendar className="text-slate-400" size={18} />
+                                    <div>
+                                        <p className="text-sm text-slate-500">Timeline</p>
+                                        <p className="font-medium">
+                                            {new Date(project.startDate).toLocaleDateString()} - {new Date(project.deadline).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Calendar className="text-slate-400" size={18} />
-                            <div>
-                                <p className="text-sm text-slate-500">Timeline</p>
-                                <p className="font-medium">
-                                    {new Date(project.startDate).toLocaleDateString()} - {new Date(project.deadline).toLocaleDateString()}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Users className="text-slate-400" size={18} />
-                            <div>
-                                <p className="text-sm text-slate-500">Project Manager</p>
-                                <p className="font-medium">{project.pmName || project.pm?.name || 'Not assigned'}</p>
-                            </div>
+                        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                            <h3 className="font-semibold mb-4">Description</h3>
+                            <p className="text-slate-600 dark:text-slate-400">
+                                {project.description || 'No description available'}
+                            </p>
                         </div>
                     </div>
                 </div>
+            )}
 
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                    <h3 className="font-semibold mb-4">Description</h3>
-                    <p className="text-slate-600 dark:text-slate-400">
-                        {project.description || 'No description available'}
-                    </p>
-                </div>
-            </div>
+            {activeTab === 'execution' && (
+                <ProgressLogger
+                    projectId={projectId}
+                    contractId={user?.id || ''} // Simplified
+                    sections={sections}
+                />
+            )}
+
+            {activeTab === 'billing' && (
+                <InvoiceWizard
+                    projectId={projectId}
+                    vendorId={user?.id || ''}
+                />
+            )}
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

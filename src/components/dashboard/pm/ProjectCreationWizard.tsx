@@ -53,6 +53,7 @@ export interface ProjectFormData {
     biddingStartDate?: string
     biddingEndDate?: string
     allowedVendorIds?: string[]
+    directJoinVendorIds?: string[]
 }
 
 const INITIAL_DEPARTMENTS: Department[] = [
@@ -96,6 +97,8 @@ export function ProjectCreationWizard({ initialData, projectId }: ProjectWizardP
         biddingEnabled: initialData?.biddingEnabled !== undefined ? initialData.biddingEnabled : true,
         biddingStartDate: initialData?.biddingStartDate?.split('T')[0] || '',
         biddingEndDate: initialData?.biddingEndDate?.split('T')[0] || '',
+        allowedVendorIds: initialData?.allowedVendorIds || [],
+        directJoinVendorIds: initialData?.directJoinVendorIds || [],
     })
 
     function updateFormData(updates: Partial<ProjectFormData>) {
@@ -120,6 +123,9 @@ export function ProjectCreationWizard({ initialData, projectId }: ProjectWizardP
 
         try {
             const token = localStorage.getItem('token')
+            if (!token) {
+                throw new Error('You must be logged in to create a project. Please login again.')
+            }
 
             // Prepare data
             const projectData = {
@@ -143,6 +149,7 @@ export function ProjectCreationWizard({ initialData, projectId }: ProjectWizardP
                 biddingStartDate: formData.biddingStartDate,
                 biddingEndDate: formData.biddingEndDate,
                 allowedVendorIds: formData.allowedVendorIds,
+                directJoinVendorIds: formData.directJoinVendorIds,
             }
 
             const url = isEdit ? `/api/projects/${projectId}` : '/api/projects'

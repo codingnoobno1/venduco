@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
-import { Project, BidInvitation, InvitationStatus, User, Notification, NotificationType, NotificationPriority } from '@/models'
+import { Project, BidInvitation, InvitationStatus, InvitationType, User, Notification, NotificationType, NotificationPriority } from '@/models'
 
 // GET single project
 export async function GET(
@@ -50,7 +50,7 @@ export async function PUT(
         const allowedFields = [
             'name', 'projectCode', 'location', 'address', 'description',
             'startDate', 'endDate', 'budget', 'status', 'progress',
-            'biddingMode', 'biddingEnabled', 'biddingStartDate', 'biddingEndDate', 'allowedVendorIds'
+            'biddingMode', 'biddingEnabled', 'biddingStartDate', 'biddingEndDate', 'allowedVendorIds', 'directJoinVendorIds'
         ]
 
         const updateData: any = {}
@@ -88,6 +88,9 @@ export async function PUT(
                         vendorName: vendor.name,
                         vendorEmail: vendor.email,
                         vendorPhone: vendor.phone,
+                        invitationType: body.directJoinVendorIds?.includes(vendor._id.toString())
+                            ? InvitationType.MEMBER
+                            : InvitationType.BID,
                         status: InvitationStatus.PENDING,
                         invitedBy: payload.userId,
                         invitedByName: pm?.name || 'Project Manager',

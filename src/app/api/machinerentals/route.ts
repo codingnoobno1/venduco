@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
 import { MachineRental, RentalStatus, Machine, Project, User, Notification, NotificationType } from '@/models'
+import { getMachineConflicts } from '@/lib/machine-availability'
 
 // GET available rentals or my rentals
 export async function GET(request: NextRequest) {
@@ -160,10 +161,24 @@ export async function POST(request: NextRequest) {
                 )
             }
 
-            // Calculate days
+            // Check for scheduling conflicts
             const start = new Date(startDate)
             const end = new Date(endDate)
-            const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+            const { hasConflicts } = await getMachineConflicts(rental.machineId, start, end)
+
+            if (hasConflicts) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'SCHEDULE_CONFLICT',
+                        message: 'Machine is already booked for these dates'
+                    },
+                    { status: 409 }
+                )
+            }
+
+            // Calculate days
+            const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) || 1
 
             rental.requestedBy = payload.userId
             rental.requestedByName = user.name

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
-import { MachineRental, RentalStatus, User, Notification, NotificationType, Machine, MachineStatus } from '@/models'
+import { MachineRental, RentalStatus, User, Notification, NotificationType, Machine, MachineStatus, MachineAssignment } from '@/models'
 
 // GET single rental
 export async function GET(
@@ -126,6 +126,19 @@ export async function PUT(
                     currentAssignedTo: assignedToUserId,
                 })
 
+                // Create MachineAssignment record
+                await MachineAssignment.create({
+                    machineId: rental.machineId,
+                    machineCode: rental.machineCode,
+                    projectId: rental.projectId,
+                    assignedToUserId: assignedToUserId,
+                    assignedByUserId: payload.userId,
+                    fromDate: rental.requestedStartDate,
+                    toDate: rental.requestedEndDate,
+                    notes: rental.approvalNotes,
+                    status: 'ACTIVE',
+                })
+
                 // Notify vendor and assignee
                 await Notification.create({
                     userId: rental.vendorId,
@@ -173,6 +186,12 @@ export async function PUT(
                     currentAssignedTo: undefined,
                 })
 
+                // Update MachineAssignment status
+                await MachineAssignment.findOneAndUpdate(
+                    { machineId: rental.machineId, projectId: rental.projectId, status: 'ACTIVE' },
+                    { status: 'COMPLETED' }
+                )
+
                 // Notify all parties
                 const recipients = [rental.vendorId, rental.requestedBy, rental.assignedToUserId].filter(Boolean) as string[]
                 for (const userId of recipients) {
@@ -181,6 +200,50 @@ export async function PUT(
                         type: NotificationType.TASK_COMPLETED,
                         title: '✓ Rental Completed',
                         message: `Rental period for ${rental.machineCode} has ended`,
+                        priority: 'NORMAL',
+                        data: { entityType: 'RENTAL', entityId: rentalId },
+                    })
+                }
+                break
+
+            case 'CANCEL':
+                // Cancellation by PM or Vendor
+                const isOwner = rental.vendorId === payload.userId
+                const isRequester = rental.requestedBy === payload.userId
+
+                if (!isOwner && !isRequester) {
+                    return NextResponse.json(
+                        { success: false, error: 'FORBIDDEN', message: 'Not authorized to cancel' },
+                        { status: 403 }
+                    )
+                }
+
+                // If currently assigned or in use, revert machine status
+                if ([RentalStatus.ASSIGNED, RentalStatus.IN_USE].includes(rental.status)) {
+                    await Machine.findByIdAndUpdate(rental.machineId, {
+                        status: MachineStatus.AVAILABLE,
+                        currentProjectId: undefined,
+                        currentAssignedTo: undefined,
+                    })
+
+                    // Update MachineAssignment status
+                    await MachineAssignment.findOneAndUpdate(
+                        { machineId: rental.machineId, projectId: rental.projectId, status: 'ACTIVE' },
+                        { status: 'CANCELLED' }
+                    )
+                }
+
+                rental.status = RentalStatus.CANCELLED
+                rental.cancellationReason = cancellationReason || `Cancelled by ${isOwner ? 'vendor' : 'requester'}`
+
+                // Notify other party
+                const notifyTarget = isOwner ? rental.requestedBy : rental.vendorId
+                if (notifyTarget) {
+                    await Notification.create({
+                        userId: notifyTarget,
+                        type: NotificationType.REPORT_REJECTED,
+                        title: '🚫 Rental Cancelled',
+                        message: `The rental of ${rental.machineCode} has been cancelled`,
                         priority: 'NORMAL',
                         data: { entityType: 'RENTAL', entityId: rentalId },
                     })

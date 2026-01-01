@@ -140,6 +140,7 @@ export interface IProject extends Document {
     biddingStartDate?: Date
     biddingEndDate?: Date
     allowedVendorIds?: string[]
+    directJoinVendorIds?: string[]
 
     // Meta
     createdBy: string
@@ -256,6 +257,7 @@ const ProjectSchema = new Schema<IProject>(
         biddingStartDate: { type: Date },
         biddingEndDate: { type: Date },
         allowedVendorIds: [{ type: String }],
+        directJoinVendorIds: [{ type: String }],
 
         // Meta
         createdBy: { type: String, required: true },

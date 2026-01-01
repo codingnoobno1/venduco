@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
-import { Bid, BidStatus, User, Notification, NotificationType, ProjectMember, MemberRole, AuditLog, AuditAction } from '@/models'
+import { Bid, BidStatus, User, Notification, NotificationType, ProjectMember, MemberRole, AuditLog, AuditAction, Contract, ContractRole, ContractScopeType, ContractStatus, BidderType } from '@/models'
 
 // GET single bid
 export async function GET(
@@ -121,8 +121,36 @@ export async function PUT(
                         },
                         { upsert: true }
                     )
+
+                    // Create ERP Contract
+                    let contractRole = ContractRole.SUBCONTRACTOR
+                    let scopeType = ContractScopeType.WORK_PACKAGE
+
+                    if (bid.bidderType === BidderType.VENDOR || bid.bidderType === BidderType.COMPANY) {
+                        if (bid.machinesOffered && (bid.machinesOffered as any).length > 0) {
+                            contractRole = ContractRole.SUPPLIER
+                            scopeType = ContractScopeType.MACHINE
+                        }
+                    } else if (bid.bidderType === BidderType.SUPERVISOR) {
+                        contractRole = ContractRole.SUBCONTRACTOR
+                        scopeType = ContractScopeType.WORK_PACKAGE
+                    }
+
+                    await Contract.create({
+                        projectId: bid.projectId,
+                        vendorId: bid.bidderId,
+                        bidId: bid._id,
+                        role: contractRole,
+                        scopeType: scopeType,
+                        startDate: bid.timeline?.startDate || new Date(),
+                        endDate: bid.timeline?.endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default 30 days
+                        agreedRate: bid.proposedAmount,
+                        currency: bid.currency || 'INR',
+                        status: ContractStatus.ACTIVE,
+                    })
+
                 } catch (err) {
-                    console.error('Failed to add as project member:', err)
+                    console.error('Failed to add as project member or create contract:', err)
                 }
 
                 notificationData = {

@@ -5,6 +5,7 @@ export enum MemberRole {
     PROJECT_MANAGER = 'PROJECT_MANAGER',
     VENDOR = 'VENDOR',
     SUPERVISOR = 'SUPERVISOR',
+    INSPECTOR = 'INSPECTOR',
     VIEWER = 'VIEWER',
 }
 

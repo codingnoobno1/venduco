@@ -15,6 +15,7 @@ import {
     Clock,
     CheckCircle2,
     AlertCircle,
+    User,
 } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/shared/StatCard'
 import { MachineCard } from '@/components/dashboard/shared/MachineCard'
@@ -23,9 +24,13 @@ import { ActivityFeed } from '@/components/dashboard/shared/ActivityFeed'
 import { LoadingSkeleton } from '@/components/dashboard/shared/LoadingSkeleton'
 import { QuickAction } from '@/components/dashboard/shared/QuickAction'
 import { StatusBadge } from '@/components/dashboard/shared/StatusBadge'
+import { VendorCapabilityProfile } from '@/components/dashboard/vendor/VendorCapabilityProfile'
+import { VendorStaffManager } from '@/components/dashboard/vendor/VendorStaffManager'
+import { use } from 'react'
 
 export default function VendorDashboard() {
     const router = useRouter()
+    const [vendorId, setVendorId] = useState('')
     const [machines, setMachines] = useState<any[]>([])
     const [myBids, setMyBids] = useState<any[]>([])
     const [rentalRequests, setRentalRequests] = useState<any[]>([])
@@ -43,6 +48,11 @@ export default function VendorDashboard() {
     })
 
     useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]))
+            setVendorId(payload.userId)
+        }
         fetchData()
     }, [])
 
@@ -128,15 +138,26 @@ export default function VendorDashboard() {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Vendor Dashboard</h1>
                     <p className="text-slate-500 mt-1">Manage your fleet and earnings</p>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => router.push('/dashboard/vendor/fleet/add')}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium flex items-center gap-2"
-                >
-                    <PlusCircle size={18} />
-                    Add Machine
-                </motion.button>
+                <div className="flex gap-3">
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => router.push('/profile')}
+                        className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium flex items-center gap-2"
+                    >
+                        <User size={18} />
+                        My Profile
+                    </motion.button>
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => router.push('/dashboard/vendor/fleet/add')}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium flex items-center gap-2"
+                    >
+                        <PlusCircle size={18} />
+                        Add Machine
+                    </motion.button>
+                </div>
             </div>
 
             {/* Stats */}
@@ -183,6 +204,18 @@ export default function VendorDashboard() {
                     color="purple"
                     onClick={() => router.push('/dashboard/vendor/assignments')}
                 />
+            </div>
+
+            {/* Staff Management Section */}
+            {vendorId && (
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 rounded-3xl p-6 border-2 border-indigo-200 dark:border-indigo-800">
+                    <VendorStaffManager vendorId={vendorId} />
+                </div>
+            )}
+
+            {/* Capability Profile Section */}
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/10 dark:to-blue-900/10 rounded-3xl p-6 border-2 border-purple-200 dark:border-purple-800">
+                <VendorCapabilityProfile />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,5 +1,5 @@
-// BidInvitation Model - Track vendor invitations to bid on projects
 import mongoose, { Schema, Document } from 'mongoose'
+import { MemberRole } from './ProjectMember'
 
 export enum InvitationStatus {
     PENDING = 'PENDING',
@@ -7,6 +7,11 @@ export enum InvitationStatus {
     DECLINED = 'DECLINED',
     EXPIRED = 'EXPIRED',
     CANCELLED = 'CANCELLED',
+}
+
+export enum InvitationType {
+    BID = 'BID',           // Standard bid invitation
+    MEMBER = 'MEMBER',     // Direct project membership
 }
 
 export interface IBidInvitation extends Document {
@@ -27,6 +32,8 @@ export interface IBidInvitation extends Document {
     message?: string
 
     // Status Tracking
+    invitationType: InvitationType
+    targetRole: MemberRole  // Role to assign if Direct Join (MEMBER)
     status: InvitationStatus
     respondedAt?: Date
     responseNotes?: string
@@ -57,6 +64,16 @@ const BidInvitationSchema = new Schema<IBidInvitation>(
         invitedAt: { type: Date, default: Date.now },
         message: { type: String },
 
+        invitationType: {
+            type: String,
+            enum: Object.values(InvitationType),
+            default: InvitationType.BID,
+        },
+        targetRole: {
+            type: String,
+            enum: Object.values(MemberRole),
+            default: MemberRole.VENDOR,
+        },
         status: {
             type: String,
             enum: Object.values(InvitationStatus),

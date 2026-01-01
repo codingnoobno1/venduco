@@ -42,6 +42,11 @@ export function BiddingStep({ data, onChange }: BiddingStepProps) {
         setIsSearching(true)
         try {
             const token = localStorage.getItem('token')
+            if (!token) {
+                setIsSearching(false)
+                return
+            }
+
             const res = await fetch(`/api/vendors?q=${searchTerm}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
@@ -56,10 +61,28 @@ export function BiddingStep({ data, onChange }: BiddingStepProps) {
 
     const toggleVendor = (vendorId: string) => {
         const current = biddingData.allowedVendorIds || []
-        const updated = current.includes(vendorId)
-            ? current.filter((id: string) => id !== vendorId)
-            : [...current, vendorId]
-        onChange({ allowedVendorIds: updated } as any)
+        const currentDirect = biddingData.directJoinVendorIds || []
+
+        if (current.includes(vendorId)) {
+            const updated = current.filter((id: string) => id !== vendorId)
+            const updatedDirect = currentDirect.filter((id: string) => id !== vendorId)
+            onChange({
+                allowedVendorIds: updated,
+                directJoinVendorIds: updatedDirect
+            } as any)
+        } else {
+            onChange({
+                allowedVendorIds: [...current, vendorId]
+            } as any)
+        }
+    }
+
+    const toggleDirectJoin = (vendorId: string) => {
+        const currentDirect = biddingData.directJoinVendorIds || []
+        const updatedDirect = currentDirect.includes(vendorId)
+            ? currentDirect.filter((id: string) => id !== vendorId)
+            : [...currentDirect, vendorId]
+        onChange({ directJoinVendorIds: updatedDirect } as any)
     }
 
     return (
@@ -223,25 +246,50 @@ export function BiddingStep({ data, onChange }: BiddingStepProps) {
 
                         {/* Selected Vendors List */}
                         {biddingData.allowedVendorIds?.length > 0 && (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                                     Invited Vendors ({biddingData.allowedVendorIds.length})
                                 </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {biddingData.allowedVendorIds.map((id: string) => (
-                                        <div
-                                            key={id}
-                                            className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-sm border border-blue-100 dark:border-blue-800"
-                                        >
-                                            <span>{id.substring(0, 8)}...</span>
-                                            <button
-                                                onClick={() => toggleVendor(id)}
-                                                className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-full"
+                                <div className="space-y-2">
+                                    {biddingData.allowedVendorIds.map((id: string) => {
+                                        const isDirect = biddingData.directJoinVendorIds?.includes(id)
+                                        return (
+                                            <div
+                                                key={id}
+                                                className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
                                             >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg">
+                                                        <UserPlus size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium">Vendor ID: {id.substring(0, 8)}...</p>
+                                                        <p className="text-xs text-slate-500">
+                                                            {isDirect ? 'Will be invited for direct join' : 'Will be invited to bid'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-medium">Direct Join</span>
+                                                        <button
+                                                            onClick={() => toggleDirectJoin(id)}
+                                                            className={`w-8 h-4 rounded-full transition-colors relative ${isDirect ? 'bg-purple-500' : 'bg-slate-300'}`}
+                                                        >
+                                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isDirect ? 'right-0.5' : 'left-0.5'}`} />
+                                                        </button>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => toggleVendor(id)}
+                                                        className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                                                    >
+                                                        <X size={18} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )}

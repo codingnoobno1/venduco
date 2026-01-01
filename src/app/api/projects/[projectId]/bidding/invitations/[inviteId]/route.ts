@@ -1,8 +1,10 @@
 // Individual Invitation API - Accept/decline/cancel
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
-import { BidInvitation, InvitationStatus } from '@/models/BidInvitation'
+import { BidInvitation, InvitationStatus, InvitationType } from '@/models/BidInvitation'
 import { Project } from '@/models/Project'
+import { ProjectMember, MemberRole } from '@/models/ProjectMember'
+import { User } from '@/models/User'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
 
 // GET single invitation
@@ -82,6 +84,35 @@ export async function PUT(
                 invitation.status = InvitationStatus.ACCEPTED
                 invitation.respondedAt = new Date()
                 invitation.responseNotes = responseNotes
+
+                // Handle automatic membership for DIRECT JOIN (MEMBER) type
+                if (invitation.invitationType === InvitationType.MEMBER) {
+                    const vendor = await User.findById(invitation.vendorId).select('name email').lean()
+                    if (vendor) {
+                        // Check if already member
+                        const existingMember = await ProjectMember.findOne({
+                            projectId: invitation.projectId,
+                            userId: invitation.vendorId
+                        })
+
+                        if (!existingMember) {
+                            await ProjectMember.create({
+                                projectId: invitation.projectId,
+                                userId: invitation.vendorId,
+                                userName: vendor.name,
+                                userEmail: vendor.email,
+                                role: invitation.targetRole || MemberRole.VENDOR,
+                                addedBy: invitation.invitedBy,
+                                addedAt: new Date(),
+                                isActive: true
+                            })
+                        } else if (!existingMember.isActive) {
+                            existingMember.isActive = true
+                            existingMember.role = invitation.targetRole || MemberRole.VENDOR
+                            await existingMember.save()
+                        }
+                    }
+                }
                 break
 
             case 'DECLINE':

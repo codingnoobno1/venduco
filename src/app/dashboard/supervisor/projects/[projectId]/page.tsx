@@ -20,6 +20,9 @@ import { StatusBadge } from '@/components/dashboard/shared/StatusBadge'
 import { LoadingSkeleton } from '@/components/dashboard/shared/LoadingSkeleton'
 import { ProgressBar } from '@/components/dashboard/shared/ProgressBar'
 import { Timeline } from '@/components/dashboard/shared/Timeline'
+import { TaskBoard } from '@/components/dashboard/supervisor/erp/TaskBoard'
+import { SiteLogistics } from '@/components/dashboard/supervisor/erp/SiteLogistics'
+import { QualityTerminal } from '@/components/dashboard/supervisor/erp/QualityTerminal'
 
 export default function SupervisorProjectDetailPage({ params }: { params: Promise<{ projectId: string }> }) {
     const { projectId } = use(params)
@@ -73,8 +76,10 @@ export default function SupervisorProjectDetailPage({ params }: { params: Promis
 
     const tabs = [
         { key: 'overview', label: 'Overview' },
-        { key: 'reports', label: `Reports (${reports.length})` },
-        { key: 'tasks', label: 'My Tasks' },
+        { key: 'tasks', label: 'Task Kanban' },
+        { key: 'logistics', label: 'Site Logistics' },
+        { key: 'quality', label: 'Quality & NCR' },
+        { key: 'reports', label: `DPR Feed (${reports.length})` },
     ]
 
     const recentReports = reports.slice(0, 5)
@@ -156,8 +161,8 @@ export default function SupervisorProjectDetailPage({ params }: { params: Promis
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
-                                    ? 'border-blue-600 text-blue-600'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             {tab.label}
@@ -251,9 +256,15 @@ export default function SupervisorProjectDetailPage({ params }: { params: Promis
             )}
 
             {activeTab === 'tasks' && (
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border">
-                    <p className="text-slate-500 text-center py-8">Task assignment coming soon</p>
-                </div>
+                <TaskBoard projectId={projectId} />
+            )}
+
+            {activeTab === 'logistics' && (
+                <SiteLogistics projectId={projectId} />
+            )}
+
+            {activeTab === 'quality' && (
+                <QualityTerminal projectId={projectId} />
             )}
         </div>
     )

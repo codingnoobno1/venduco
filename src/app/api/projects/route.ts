@@ -3,7 +3,9 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
-import { Project, ProjectStatus, BidInvitation, InvitationStatus, User, Notification, NotificationType, NotificationPriority } from '@/models'
+import { Project, ProjectStatus, BiddingMode } from '@/models/Project'
+import { BidInvitation, InvitationStatus, InvitationType } from '@/models/BidInvitation'
+import { User, Notification, NotificationType, NotificationPriority } from '@/models'
 
 // GET all projects (with filters)
 export async function GET(request: NextRequest) {
@@ -54,7 +56,8 @@ export async function POST(request: NextRequest) {
             location, address, description, startDate, endDate, deadline, budget,
             clientName, projectType, planningStatus, minExperience, requiredBrands,
             maintenancePeriod, imageUrl, departments,
-            biddingMode, biddingEnabled, biddingStartDate, biddingEndDate, allowedVendorIds
+            biddingMode, biddingEnabled, biddingStartDate, biddingEndDate, allowedVendorIds,
+            directJoinVendorIds
         } = body
 
         // Validation
@@ -99,6 +102,7 @@ export async function POST(request: NextRequest) {
             biddingStartDate: biddingStartDate ? new Date(biddingStartDate) : undefined,
             biddingEndDate: biddingEndDate ? new Date(biddingEndDate) : undefined,
             allowedVendorIds: allowedVendorIds || [],
+            directJoinVendorIds: directJoinVendorIds || [],
         })
 
         // Create Bid Invitations for invited vendors
@@ -115,6 +119,9 @@ export async function POST(request: NextRequest) {
                     vendorName: vendor.name,
                     vendorEmail: vendor.email,
                     vendorPhone: vendor.phone,
+                    invitationType: directJoinVendorIds?.includes(vendor._id.toString())
+                        ? InvitationType.MEMBER
+                        : InvitationType.BID,
                     status: InvitationStatus.PENDING,
                     invitedBy: payload.userId,
                     invitedByName: pm?.name || 'Project Manager',

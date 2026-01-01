@@ -29,6 +29,7 @@ export default function BiddingInvitationsPage({ params }: { params: Promise<{ p
     const [vendors, setVendors] = useState<any[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     const [inviting, setInviting] = useState(false)
+    const [isDirectJoin, setIsDirectJoin] = useState(false)
 
     useEffect(() => {
         fetchInvitations()
@@ -70,7 +71,10 @@ export default function BiddingInvitationsPage({ params }: { params: Promise<{ p
             await fetch(`/api/projects/${projectId}/bidding/invitations`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ vendorId })
+                body: JSON.stringify({
+                    vendorId,
+                    invitationType: isDirectJoin ? 'MEMBER' : 'BID'
+                })
             })
             fetchInvitations()
             setShowInviteModal(false)
@@ -184,6 +188,18 @@ export default function BiddingInvitationsPage({ params }: { params: Promise<{ p
                                     <Trash2 size={16} />
                                 </button>
                             )
+                        },
+                        {
+                            key: 'type',
+                            label: 'Type',
+                            render: (_, row) => (
+                                <span className={`text-xs px-2 py-1 rounded-full ${row.invitationType === 'MEMBER'
+                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                    }`}>
+                                    {row.invitationType === 'MEMBER' ? 'Direct Join' : 'Bid to Join'}
+                                </span>
+                            )
                         }
                     ]}
                     data={invitations}
@@ -214,6 +230,27 @@ export default function BiddingInvitationsPage({ params }: { params: Promise<{ p
                                 }}
                                 className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900"
                             />
+                        </div>
+
+                        {/* Direct Join Toggle */}
+                        <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${isDirectJoin ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-500'}`}>
+                                        <UserPlus size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">Direct Join</p>
+                                        <p className="text-xs text-slate-500">Vendor skips bidding and joins team directly</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsDirectJoin(!isDirectJoin)}
+                                    className={`w-10 h-5 rounded-full transition-colors relative ${isDirectJoin ? 'bg-purple-500' : 'bg-slate-300'}`}
+                                >
+                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${isDirectJoin ? 'right-0.5' : 'left-0.5'}`} />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="max-h-64 overflow-y-auto space-y-2">

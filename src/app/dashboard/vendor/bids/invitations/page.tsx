@@ -60,6 +60,14 @@ export default function VendorBidInvitationsPage() {
             })
 
             if (action === 'ACCEPT') {
+                if (invite.invitationType === 'MEMBER') {
+                    const role = invite.targetRole || 'VENDOR'
+                    const dashboardPath = role === 'SUPERVISOR' ? 'supervisor' :
+                        role === 'INSPECTOR' ? 'inspector' :
+                            'vendor'
+                    router.push(`/dashboard/${dashboardPath}/projects/${projectId}`)
+                    return
+                }
                 setSelectedProject(invite.project)
             }
 
@@ -126,7 +134,14 @@ export default function VendorBidInvitationsPage() {
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <h4 className="font-semibold text-lg">{invite.projectName}</h4>
-                                        <p className="text-sm text-slate-500">{invite.projectCode}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm text-slate-500">{invite.projectCode}</p>
+                                            {invite.invitationType === 'MEMBER' && (
+                                                <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded tracking-tighter uppercase">
+                                                    Joining as {invite.targetRole || 'VENDOR'}
+                                                </span>
+                                            )}
+                                        </div>
 
                                         {invite.project && (
                                             <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-500">
@@ -169,7 +184,11 @@ export default function VendorBidInvitationsPage() {
                                         className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale"
                                     >
                                         <CheckCircle2 size={18} />
-                                        {invite.isBiddingLocked ? 'Bidding Locked' : 'Accept & Submit Bid'}
+                                        {invite.isBiddingLocked
+                                            ? 'Bidding Locked'
+                                            : invite.invitationType === 'MEMBER'
+                                                ? 'Join Project'
+                                                : 'Accept & Submit Bid'}
                                     </motion.button>
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}

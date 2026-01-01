@@ -19,6 +19,9 @@ import {
     Settings,
     MoreVertical,
     Building2,
+    ShieldCheck,
+    Beaker,
+    Map as MapIcon,
 } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/shared/StatCard'
 import { StatusBadge } from '@/components/dashboard/shared/StatusBadge'
@@ -26,15 +29,26 @@ import { DataTable } from '@/components/dashboard/shared/DataTable'
 import { ActivityFeed } from '@/components/dashboard/shared/ActivityFeed'
 import { LoadingSkeleton } from '@/components/dashboard/shared/LoadingSkeleton'
 import { WorkPackageCard } from '@/components/dashboard/shared/WorkPackageCard'
+import { BiddingControlPanel } from '@/components/dashboard/pm/BiddingControlPanel'
+import { ERPOverview } from '@/components/dashboard/pm/erp/ERPOverview'
+import { SectionManager } from '@/components/dashboard/pm/erp/SectionManager'
+import { QualityCenter } from '@/components/dashboard/pm/erp/QualityCenter'
+import { PMControlCenter } from '@/components/dashboard/pm/erp/PMControlCenter'
+import { InvitationModal } from '@/components/dashboard/pm/InvitationModal'
+import { StrategyControlRoom } from '@/components/dashboard/pm/StrategyControlRoom'
+import { FinancialDashboard } from '@/components/dashboard/pm/FinancialDashboard'
+import { UserPlus, UserCheck, Clock as ClockIcon } from 'lucide-react'
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ projectId: string }> }) {
     const { projectId } = use(params)
     const router = useRouter()
     const [project, setProject] = useState<any>(null)
-    const [vendors, setVendors] = useState<any[]>([])
+    const [members, setMembers] = useState<any[]>([])
+    const [invitations, setInvitations] = useState<any[]>([])
     const [bids, setBids] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('overview')
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
     useEffect(() => {
         fetchProject()
@@ -50,7 +64,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
             if (data.success) {
                 setProject(data.data)
                 // Also fetch related data
-                fetchVendors()
+                fetchMembers()
+                fetchInvitations()
                 fetchBids()
             } else {
                 router.push('/dashboard/pm/projects')
@@ -62,16 +77,29 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
         }
     }
 
-    async function fetchVendors() {
+    async function fetchMembers() {
         const token = localStorage.getItem('token')
         try {
-            const res = await fetch(`/api/projects/${projectId}/vendors`, {
+            const res = await fetch(`/api/projects/${projectId}/members`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             const data = await res.json()
-            if (data.success) setVendors(data.data)
+            if (data.success) setMembers(data.data)
         } catch (err) {
-            console.error('Failed to fetch vendors:', err)
+            console.error('Failed to fetch members:', err)
+        }
+    }
+
+    async function fetchInvitations() {
+        const token = localStorage.getItem('token')
+        try {
+            const res = await fetch(`/api/projects/${projectId}/bidding/invitations`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = await res.json()
+            if (data.success) setInvitations(data.data)
+        } catch (err) {
+            console.error('Failed to fetch invitations:', err)
         }
     }
 
@@ -107,9 +135,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
 
     const tabs = [
         { key: 'overview', label: 'Overview' },
-        { key: 'departments', label: 'Departments' },
+        { key: 'control-tower', label: 'Control Tower' },
+        { key: 'erp-overview', label: 'Weighted Progress' },
+        { key: 'sections', label: 'Sections' },
+        { key: 'quality', label: 'Quality & Governance' },
+        { key: 'financials', label: 'Financials' },
+        { key: 'strategy', label: 'Strategy' },
+        { key: 'collaboration', label: 'Collaboration Hub' },
+        { key: 'bidding', label: 'Bidding' },
         { key: 'team', label: 'Team' },
-        { key: 'reports', label: 'Reports' },
         { key: 'bids', label: 'Bids' },
     ]
 
@@ -285,28 +319,164 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
                 </div>
             )}
 
-            {activeTab === 'departments' && (
-                <div className="space-y-4">
-                    {project.departments?.filter((d: any) => d.isSelected).length > 0 ? (
-                        project.departments.filter((d: any) => d.isSelected).map((dept: any) => (
-                            <div key={dept.name} className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">{dept.name}</h3>
-                                {dept.workPackages?.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {dept.workPackages.map((wp: any) => (
-                                            <WorkPackageCard key={wp.id} workPackage={wp} />
-                                        ))}
+            {activeTab === 'control-tower' && (
+                <PMControlCenter projectId={projectId} />
+            )}
+
+            {activeTab === 'erp-overview' && (
+                <ERPOverview projectId={projectId} />
+            )}
+
+            {activeTab === 'sections' && (
+                <SectionManager projectId={projectId} />
+            )}
+
+            {activeTab === 'quality' && (
+                <QualityCenter projectId={projectId} />
+            )}
+
+            {activeTab === 'bidding' && (
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Bidding Controls</h3>
+                        <button
+                            onClick={() => router.push(`/dashboard/pm/projects/${projectId}/bidding`)}
+                            className="text-sm text-blue-600 hover:underline font-medium"
+                        >
+                            Open Advanced Bidding Page
+                        </button>
+                    </div>
+                    <BiddingControlPanel
+                        settings={{
+                            biddingMode: project.biddingMode || 'CLOSED',
+                            biddingEnabled: project.biddingEnabled || false,
+                            biddingStartDate: project.biddingStartDate?.split('T')[0],
+                            biddingEndDate: project.biddingEndDate?.split('T')[0],
+                        }}
+                        onSettingsChange={async (newSettings) => {
+                            const token = localStorage.getItem('token')
+                            try {
+                                const res = await fetch(`/api/projects/${projectId}/bidding`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        Authorization: `Bearer ${token}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(newSettings)
+                                })
+                                if (res.ok) fetchProject()
+                            } catch (error) {
+                                console.error('Failed to update bidding settings:', error)
+                            }
+                        }}
+                        invitedCount={project.allowedVendorIds?.length || 0}
+                    />
+                </div>
+            )}
+
+            {activeTab === 'financials' && (
+                <div className="space-y-6">
+                    <FinancialDashboard projectId={projectId} />
+                </div>
+            )}
+
+            {activeTab === 'strategy' && (
+                <div className="space-y-6">
+                    <StrategyControlRoom projectId={projectId} />
+                </div>
+            )}
+
+            {activeTab === 'collaboration' && (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div className="flex gap-4">
+                            <div className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-600/20">
+                                <Users size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold">Project Team</h3>
+                                <p className="text-sm text-slate-500">Manage all collaborators and vendors joined to this project</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsInviteModalOpen(true)}
+                            className="px-5 py-2.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-xl"
+                        >
+                            <UserPlus size={18} />
+                            Invite Member
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Active Members */}
+                        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-900/50">
+                                <UserCheck size={18} className="text-blue-600" />
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-slate-600">Active Members ({members.length})</h4>
+                            </div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                {members.map(member => (
+                                    <div key={member._id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500">
+                                                {member.userName[0]}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold">{member.userName}</p>
+                                                <p className="text-xs text-slate-500">{member.userEmail}</p>
+                                            </div>
+                                        </div>
+                                        <StatusBadge status={member.role} />
                                     </div>
-                                ) : (
-                                    <p className="text-slate-500 text-sm">No work packages</p>
+                                ))}
+                                {members.length === 0 && (
+                                    <p className="p-8 text-center text-slate-400 text-sm">No members joined yet</p>
                                 )}
                             </div>
-                        ))
-                    ) : (
-                        <div className="bg-white dark:bg-slate-800 rounded-xl p-8 text-center border border-slate-200 dark:border-slate-700">
-                            <p className="text-slate-500">No departments configured</p>
                         </div>
-                    )}
+
+                        {/* Pending Invitations */}
+                        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-900/50">
+                                <ClockIcon size={18} className="text-amber-500" />
+                                <h4 className="text-sm font-bold uppercase tracking-widest text-slate-600">Pending Invites ({invitations.length})</h4>
+                            </div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                {invitations.filter(i => i.status === 'PENDING').map(invite => (
+                                    <div key={invite._id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                                        <div>
+                                            <p className="text-sm font-bold">{invite.vendorName}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">
+                                                    {invite.targetRole || 'VENDOR'}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400 font-mono italic">
+                                                    {invite.invitationType}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-slate-400">Sent {new Date(invite.invitedAt).toLocaleDateString()}</p>
+                                            <button className="text-[10px] font-bold text-red-600 hover:underline uppercase mt-1">Revoke</button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {invitations.filter(i => i.status === 'PENDING').length === 0 && (
+                                    <p className="p-8 text-center text-slate-400 text-sm">No pending invitations</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <InvitationModal
+                        projectId={projectId}
+                        isOpen={isInviteModalOpen}
+                        onClose={() => setIsInviteModalOpen(false)}
+                        onSuccess={() => {
+                            fetchMembers()
+                            fetchInvitations()
+                        }}
+                    />
                 </div>
             )}
 
@@ -319,11 +489,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
                             { key: 'role', label: 'Role', render: (val) => <StatusBadge status={val} /> },
                             { key: 'addedAt', label: 'Joined', render: (val) => new Date(val).toLocaleDateString() },
                         ]}
-                        data={vendors}
+                        data={members.filter(m => m.role === 'VENDOR')}
                         pageSize={10}
                     />
-                    {vendors.length === 0 && (
-                        <p className="p-8 text-center text-slate-500">No team members joined yet</p>
+                    {members.filter(m => m.role === 'VENDOR').length === 0 && (
+                        <p className="p-8 text-center text-slate-500">No vendors joined yet</p>
                     )}
                 </div>
             )}

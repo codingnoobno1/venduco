@@ -16,6 +16,7 @@ import {
     PauseCircle,
     Calendar,
     MessageSquare,
+    User,
 } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/shared/StatCard'
 import { ProjectCard } from '@/components/dashboard/shared/ProjectCard'
@@ -129,28 +130,39 @@ export default function SupervisorDashboard() {
                     <p className="text-slate-500 mt-1">Field operations at a glance</p>
                 </div>
 
-                {/* Clock In/Out Button */}
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleClockInOut}
-                    className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 ${isClockedIn
+                <div className="flex gap-3">
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => router.push('/profile')}
+                        className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium flex items-center gap-2"
+                    >
+                        <User size={18} />
+                        My Profile
+                    </motion.button>
+                    {/* Clock In/Out Button */}
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleClockInOut}
+                        className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 ${isClockedIn
                             ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                             : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                        }`}
-                >
-                    {isClockedIn ? (
-                        <>
-                            <PauseCircle size={20} />
-                            Clock Out ({getWorkDuration()})
-                        </>
-                    ) : (
-                        <>
-                            <PlayCircle size={20} />
-                            Clock In
-                        </>
-                    )}
-                </motion.button>
+                            }`}
+                    >
+                        {isClockedIn ? (
+                            <>
+                                <PauseCircle size={20} />
+                                Clock Out ({getWorkDuration()})
+                            </>
+                        ) : (
+                            <>
+                                <PlayCircle size={20} />
+                                Clock In
+                            </>
+                        )}
+                    </motion.button>
+                </div>
             </div>
 
             {/* Stats */}
