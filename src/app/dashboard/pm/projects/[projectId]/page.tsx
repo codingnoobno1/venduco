@@ -31,6 +31,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
     const { projectId } = use(params)
     const router = useRouter()
     const [project, setProject] = useState<any>(null)
+    const [vendors, setVendors] = useState<any[]>([])
+    const [bids, setBids] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('overview')
 
@@ -47,6 +49,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
             const data = await res.json()
             if (data.success) {
                 setProject(data.data)
+                // Also fetch related data
+                fetchVendors()
+                fetchBids()
             } else {
                 router.push('/dashboard/pm/projects')
             }
@@ -54,6 +59,32 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
             console.error('Failed to fetch project:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function fetchVendors() {
+        const token = localStorage.getItem('token')
+        try {
+            const res = await fetch(`/api/projects/${projectId}/vendors`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = await res.json()
+            if (data.success) setVendors(data.data)
+        } catch (err) {
+            console.error('Failed to fetch vendors:', err)
+        }
+    }
+
+    async function fetchBids() {
+        const token = localStorage.getItem('token')
+        try {
+            const res = await fetch(`/api/projects/${projectId}/bids`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = await res.json()
+            if (data.success) setBids(data.data)
+        } catch (err) {
+            console.error('Failed to fetch bids:', err)
         }
     }
 
@@ -171,8 +202,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
-                                    ? 'border-blue-600 text-blue-600'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             {tab.label}
@@ -280,8 +311,20 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
             )}
 
             {activeTab === 'team' && (
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                    <p className="text-slate-500 text-center py-8">Team management coming soon</p>
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <DataTable
+                        columns={[
+                            { key: 'userName', label: 'Name', sortable: true },
+                            { key: 'userEmail', label: 'Email' },
+                            { key: 'role', label: 'Role', render: (val) => <StatusBadge status={val} /> },
+                            { key: 'addedAt', label: 'Joined', render: (val) => new Date(val).toLocaleDateString() },
+                        ]}
+                        data={vendors}
+                        pageSize={10}
+                    />
+                    {vendors.length === 0 && (
+                        <p className="p-8 text-center text-slate-500">No team members joined yet</p>
+                    )}
                 </div>
             )}
 
@@ -292,8 +335,36 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
             )}
 
             {activeTab === 'bids' && (
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                    <p className="text-slate-500 text-center py-8">Bids section coming soon</p>
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <DataTable
+                        columns={[
+                            { key: 'bidderName', label: 'Bidder', sortable: true },
+                            { key: 'companyName', label: 'Company' },
+                            {
+                                key: 'proposedAmount',
+                                label: 'Amount',
+                                render: (val) => `₹${val?.toLocaleString() || 0}`
+                            },
+                            { key: 'status', label: 'Status', render: (val) => <StatusBadge status={val} /> },
+                            {
+                                key: 'actions',
+                                label: '',
+                                render: (_, row) => (
+                                    <button
+                                        onClick={() => router.push(`/dashboard/pm/bids/${row._id}`)}
+                                        className="text-blue-600 hover:underline text-sm"
+                                    >
+                                        Review
+                                    </button>
+                                )
+                            }
+                        ]}
+                        data={bids}
+                        pageSize={10}
+                    />
+                    {bids.length === 0 && (
+                        <p className="p-8 text-center text-slate-500">No bids submitted yet</p>
+                    )}
                 </div>
             )}
         </div>

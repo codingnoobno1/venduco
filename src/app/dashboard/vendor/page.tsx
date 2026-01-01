@@ -79,12 +79,17 @@ export default function VendorDashboard() {
                 earnings: 125000, // Placeholder
             })
 
-            // Mock activities
-            setActivities([
-                { id: '1', type: 'rental', title: 'Rental request received', description: 'Crane TC-05', timestamp: new Date().toISOString() },
-                { id: '2', type: 'bid', title: 'Bid approved!', description: 'Metro CP-305', timestamp: new Date(Date.now() - 3600000).toISOString() },
-                { id: '3', type: 'machine', title: 'Maintenance completed', description: 'Excavator EX-03', timestamp: new Date(Date.now() - 7200000).toISOString() },
-            ])
+            // Fetch real activities from audit logs
+            const logsRes = await fetch('/api/audit-logs?limit=10', { headers })
+            const logsData = await logsRes.json()
+            const realActivities = (logsData.data || []).map((log: any) => ({
+                id: log._id,
+                type: log.entityType?.toLowerCase() || 'general',
+                title: log.action.replace('_', ' '),
+                description: log.description,
+                timestamp: log.timestamp
+            }))
+            setActivities(realActivities)
         } catch (error) {
             console.error('Failed to fetch data:', error)
         } finally {

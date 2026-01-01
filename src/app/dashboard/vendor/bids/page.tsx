@@ -26,6 +26,8 @@ export default function VendorBidsPage() {
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all')
     const [selectedBid, setSelectedBid] = useState<any>(null)
+    const [withdrawing, setWithdrawing] = useState(false)
+    const [actionError, setActionError] = useState('')
 
     useEffect(() => {
         fetchBids()
@@ -43,6 +45,35 @@ export default function VendorBidsPage() {
             console.error('Failed to fetch bids:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function handleWithdraw(bidId: string) {
+        if (!confirm('Are you sure you want to withdraw this bid?')) return
+
+        setWithdrawing(true)
+        setActionError('')
+        const token = localStorage.getItem('token')
+
+        try {
+            const res = await fetch(`/api/bids/${bidId}`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'WITHDRAW' })
+            })
+
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.message || 'Failed to withdraw bid')
+
+            setSelectedBid(null)
+            fetchBids()
+        } catch (error: any) {
+            setActionError(error.message)
+        } finally {
+            setWithdrawing(false)
         }
     }
 
@@ -102,8 +133,8 @@ export default function VendorBidsPage() {
                         key={tab.key}
                         onClick={() => setFilter(tab.key)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === tab.key
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'
                             }`}
                     >
                         {tab.label}
@@ -197,6 +228,33 @@ export default function VendorBidsPage() {
                                     </p>
                                 </div>
                             )}
+
+                            {actionError && (
+                                <p className="text-sm text-red-600 font-medium">{actionError}</p>
+                            )}
+
+                            <div className="pt-4 border-t border-slate-200 dark:border-slate-700 flex gap-3">
+                                <button
+                                    onClick={() => setSelectedBid(null)}
+                                    className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-medium hover:bg-slate-50 dark:hover:bg-slate-700"
+                                >
+                                    Close
+                                </button>
+                                {selectedBid.status !== 'APPROVED' && selectedBid.status !== 'WITHDRAWN' && (
+                                    <button
+                                        disabled={withdrawing}
+                                        onClick={() => handleWithdraw(selectedBid._id)}
+                                        className="flex-1 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {withdrawing ? (
+                                            <RefreshCw size={16} className="animate-spin" />
+                                        ) : (
+                                            <XCircle size={16} />
+                                        )}
+                                        Withdraw Bid
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
                 </div>

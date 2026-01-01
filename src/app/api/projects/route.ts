@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
-import { Project, ProjectStatus } from '@/models'
+import { Project, ProjectStatus, BidInvitation, InvitationStatus, User, Notification, NotificationType, NotificationPriority } from '@/models'
 
 // GET all projects (with filters)
 export async function GET(request: NextRequest) {
@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
         const {
             location, address, description, startDate, endDate, deadline, budget,
             clientName, projectType, planningStatus, minExperience, requiredBrands,
-            maintenancePeriod, imageUrl, departments
+            maintenancePeriod, imageUrl, departments,
+            biddingMode, biddingEnabled, biddingStartDate, biddingEndDate, allowedVendorIds
         } = body
 
         // Validation
@@ -93,7 +94,60 @@ export async function POST(request: NextRequest) {
             pmId: payload.userId,
             createdBy: payload.userId,
             status: ProjectStatus.PLANNING,
+            biddingMode: biddingMode || 'CLOSED',
+            biddingEnabled: biddingEnabled || false,
+            biddingStartDate: biddingStartDate ? new Date(biddingStartDate) : undefined,
+            biddingEndDate: biddingEndDate ? new Date(biddingEndDate) : undefined,
+            allowedVendorIds: allowedVendorIds || [],
         })
+
+        // Create Bid Invitations for invited vendors
+        if (allowedVendorIds && Array.isArray(allowedVendorIds) && allowedVendorIds.length > 0) {
+            try {
+                const vendors = await User.find({ _id: { $in: allowedVendorIds } }).select('name email phone').lean()
+                const pm = await User.findById(payload.userId).select('name').lean()
+
+                const invitationsData = vendors.map(vendor => ({
+                    projectId: project._id,
+                    projectName: project.name,
+                    projectCode: project.projectCode,
+                    vendorId: vendor._id,
+                    vendorName: vendor.name,
+                    vendorEmail: vendor.email,
+                    vendorPhone: vendor.phone,
+                    status: InvitationStatus.PENDING,
+                    invitedBy: payload.userId,
+                    invitedByName: pm?.name || 'Project Manager',
+                    invitedAt: new Date(),
+                }))
+
+                if (invitationsData.length > 0) {
+                    await BidInvitation.insertMany(invitationsData)
+
+                    // Create Notifications for each vendor
+                    const notificationsData = vendors.map(vendor => ({
+                        userId: vendor._id,
+                        type: NotificationType.BID_INVITATION,
+                        title: 'New Bid Invitation',
+                        message: `You have been invited to bid on project: ${project.name}`,
+                        priority: NotificationPriority.NORMAL,
+                        data: {
+                            entityType: 'PROJECT',
+                            entityId: project._id,
+                            projectCode: project.projectCode,
+                            actionUrl: `/dashboard/vendor/bids/invitations`,
+                        },
+                    }))
+
+                    if (notificationsData.length > 0) {
+                        await Notification.insertMany(notificationsData)
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to create invitations:', err)
+                // We don't fail the project creation if invitations fail
+            }
+        }
 
         return NextResponse.json(
             {

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react'
 import { ProjectDetailsStep } from './ProjectDetailsStep'
 import { DepartmentsStep } from './DepartmentsStep'
+import { BiddingStep } from './BiddingStep'
 import { ReviewStep } from './ReviewStep'
 
 export interface WorkPackage {
@@ -45,6 +46,13 @@ export interface ProjectFormData {
 
     // Step 1: Departments
     departments: Department[]
+
+    // Step 2: Bidding (New)
+    biddingMode: 'OPEN' | 'INVITE_ONLY'
+    biddingEnabled: boolean
+    biddingStartDate?: string
+    biddingEndDate?: string
+    allowedVendorIds?: string[]
 }
 
 const INITIAL_DEPARTMENTS: Department[] = [
@@ -55,9 +63,15 @@ const INITIAL_DEPARTMENTS: Department[] = [
     { name: 'Buildings', isSelected: false, workPackages: [] },
 ]
 
-const STEPS = ['Details', 'Departments', 'Review']
+const STEPS = ['Details', 'Departments', 'Bidding', 'Review']
 
-export function ProjectCreationWizard() {
+interface ProjectWizardProps {
+    initialData?: Partial<ProjectFormData>
+    projectId?: string
+}
+
+export function ProjectCreationWizard({ initialData, projectId }: ProjectWizardProps) {
+    const isEdit = !!projectId
     const router = useRouter()
     const [currentStep, setCurrentStep] = useState(0)
     const [loading, setLoading] = useState(false)
@@ -77,7 +91,11 @@ export function ProjectCreationWizard() {
         maintenancePeriod: 1,
         description: '',
         imageUrl: '',
-        departments: INITIAL_DEPARTMENTS,
+        departments: initialData?.departments || INITIAL_DEPARTMENTS,
+        biddingMode: initialData?.biddingMode || 'OPEN',
+        biddingEnabled: initialData?.biddingEnabled !== undefined ? initialData.biddingEnabled : true,
+        biddingStartDate: initialData?.biddingStartDate?.split('T')[0] || '',
+        biddingEndDate: initialData?.biddingEndDate?.split('T')[0] || '',
     })
 
     function updateFormData(updates: Partial<ProjectFormData>) {
@@ -120,10 +138,18 @@ export function ProjectCreationWizard() {
                 description: formData.description,
                 imageUrl: formData.imageUrl,
                 departments: formData.departments.filter(d => d.isSelected),
+                biddingMode: formData.biddingMode,
+                biddingEnabled: formData.biddingEnabled,
+                biddingStartDate: formData.biddingStartDate,
+                biddingEndDate: formData.biddingEndDate,
+                allowedVendorIds: formData.allowedVendorIds,
             }
 
-            const res = await fetch('/api/projects', {
-                method: 'POST',
+            const url = isEdit ? `/api/projects/${projectId}` : '/api/projects'
+            const method = isEdit ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -138,7 +164,8 @@ export function ProjectCreationWizard() {
             }
 
             // Redirect to project page
-            router.push(`/dashboard/pm/projects/${data.data._id}`)
+            const id = data.data.projectId || data.data._id
+            router.push(`/dashboard/pm/projects/${id}`)
         } catch (err: any) {
             setError(err.message)
         } finally {
@@ -154,10 +181,10 @@ export function ProjectCreationWizard() {
                     {STEPS.map((step, index) => (
                         <div key={step} className="flex items-center">
                             <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-colors ${index < currentStep
-                                    ? 'bg-emerald-500 text-white'
-                                    : index === currentStep
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                                ? 'bg-emerald-500 text-white'
+                                : index === currentStep
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
                                 }`}>
                                 {index < currentStep ? <Check size={20} /> : index + 1}
                             </div>
@@ -205,6 +232,12 @@ export function ProjectCreationWizard() {
                             />
                         )}
                         {currentStep === 2 && (
+                            <BiddingStep
+                                data={formData}
+                                onChange={updateFormData}
+                            />
+                        )}
+                        {currentStep === 3 && (
                             <ReviewStep
                                 data={formData}
                                 onEdit={(step) => setCurrentStep(step)}
@@ -250,7 +283,7 @@ export function ProjectCreationWizard() {
                         ) : (
                             <>
                                 <Check size={20} />
-                                Publish Project
+                                {isEdit ? 'Update Project' : 'Publish Project'}
                             </>
                         )}
                     </motion.button>

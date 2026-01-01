@@ -37,15 +37,38 @@ export async function GET(request: NextRequest) {
         // Enrich with project details
         const projectIds = [...new Set(invitations.map(i => i.projectId))]
         const projects = await Project.find({ _id: { $in: projectIds } })
-            .select('name projectCode budget deadline biddingEndDate location')
+            .select('name projectCode budget deadline biddingEndDate biddingStartDate biddingEnabled location')
             .lean()
 
         const projectMap = new Map(projects.map(p => [String(p._id), p]))
 
-        const enrichedInvitations = invitations.map(inv => ({
-            ...inv,
-            project: projectMap.get(inv.projectId),
-        }))
+        const now = new Date()
+
+        const enrichedInvitations = invitations.map(inv => {
+            const project = projectMap.get(inv.projectId)
+            let isBiddingLocked = false
+            let lockReason = ''
+
+            if (project) {
+                if (!project.biddingEnabled) {
+                    isBiddingLocked = true
+                    lockReason = 'Bidding is disabled for this project'
+                } else if (project.biddingStartDate && new Date(project.biddingStartDate) > now) {
+                    isBiddingLocked = true
+                    lockReason = `Bidding opens on ${new Date(project.biddingStartDate).toLocaleDateString()}`
+                } else if (project.biddingEndDate && new Date(project.biddingEndDate) < now) {
+                    isBiddingLocked = true
+                    lockReason = 'Bidding period has ended'
+                }
+            }
+
+            return {
+                ...inv,
+                project,
+                isBiddingLocked,
+                lockReason
+            }
+        })
 
         const pendingCount = invitations.filter(i => i.status === InvitationStatus.PENDING).length
 

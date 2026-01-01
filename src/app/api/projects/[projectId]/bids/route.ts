@@ -66,13 +66,50 @@ export async function POST(
         const { projectId } = await params
         const body = await request.json()
 
-        // Get project
-        const project = await Project.findById(projectId).select('name pmId status').lean()
+        // Get project with bidding controls
+        const project = await Project.findById(projectId)
+            .select('name pmId status biddingEnabled biddingMode allowedVendorIds biddingStartDate biddingEndDate')
+            .lean()
+
         if (!project) {
             return NextResponse.json(
                 { success: false, error: 'NOT_FOUND', message: 'Project not found' },
                 { status: 404 }
             )
+        }
+
+        // 1. Check if bidding is enabled
+        if (!project.biddingEnabled) {
+            return NextResponse.json(
+                { success: false, error: 'BIDDING_CLOSED', message: 'Bidding is currently closed for this project' },
+                { status: 403 }
+            )
+        }
+
+        // 2. Check bidding dates
+        const now = new Date()
+        if (project.biddingStartDate && now < new Date(project.biddingStartDate)) {
+            return NextResponse.json(
+                { success: false, error: 'BIDDING_NOT_STARTED', message: 'Bidding has not started yet' },
+                { status: 403 }
+            )
+        }
+        if (project.biddingEndDate && now > new Date(project.biddingEndDate)) {
+            return NextResponse.json(
+                { success: false, error: 'BIDDING_EXPIRED', message: 'Bidding has ended for this project' },
+                { status: 403 }
+            )
+        }
+
+        // 3. Check bidding mode (INVITE_ONLY)
+        if (project.biddingMode === 'INVITE_ONLY') {
+            const isAllowed = project.allowedVendorIds?.includes(payload.userId)
+            if (!isAllowed) {
+                return NextResponse.json(
+                    { success: false, error: 'NOT_INVITED', message: 'This project is invite-only and you are not on the invited list' },
+                    { status: 403 }
+                )
+            }
         }
 
         // Get bidder info

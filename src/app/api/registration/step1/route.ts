@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken'
 import dbConnect from '@/lib/db'
 import { User, RegistrationStatus } from '@/models'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
 
 export async function POST(request: NextRequest) {
     try {

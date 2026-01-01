@@ -43,6 +43,15 @@ const nextConfig: NextConfig = {
   },
 
   /**
+   * Transpile React Native packages for web
+   */
+  transpilePackages: [
+    'react-native-paper',
+    'react-native-safe-area-context',
+    'react-native-vector-icons',
+  ],
+
+  /**
    * Turbopack config (Next.js 16+)
    * React Native Web support
    */

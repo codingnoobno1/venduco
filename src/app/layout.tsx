@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-// import { MaterialProvider } from "@/components/providers/material-provider";
+import { MaterialProvider } from "@/components/providers/material-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,10 +35,9 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange={false}
         >
-          {children}
-          {/* <MaterialProvider>
+          <MaterialProvider>
             {children}
-          </MaterialProvider> */}
+          </MaterialProvider>
         </ThemeProvider>
       </body>
     </html>

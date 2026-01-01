@@ -24,6 +24,7 @@ import { ActivityFeed } from '@/components/dashboard/shared/ActivityFeed'
 import { LoadingSkeleton } from '@/components/dashboard/shared/LoadingSkeleton'
 import { QuickAction } from '@/components/dashboard/shared/QuickAction'
 import { StatusBadge } from '@/components/dashboard/shared/StatusBadge'
+import { ProjectInsights } from '@/components/dashboard/pm/ProjectInsights'
 
 export default function PMDashboard() {
     const router = useRouter()
@@ -31,7 +32,7 @@ export default function PMDashboard() {
     const [pendingReports, setPendingReports] = useState<any[]>([])
     const [pendingBids, setPendingBids] = useState<any[]>([])
     const [rentalRequests, setRentalRequests] = useState<any[]>([])
-    const [activities, setActivities] = useState<any[]>([])
+    const [auditLogs, setAuditLogs] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState({
         projects: 0,
@@ -75,12 +76,19 @@ export default function PMDashboard() {
                 ),
             })
 
-            // Mock activities
-            setActivities([
-                { id: '1', type: 'report', title: 'Daily report received', description: 'From Supervisor Raj Kumar', timestamp: new Date().toISOString() },
-                { id: '2', type: 'bid', title: 'New bid received', description: 'ABC Equipments - Metro CP-305', timestamp: new Date(Date.now() - 1800000).toISOString() },
-                { id: '3', type: 'machine', title: 'Machine assigned', description: 'Crane TC-05 to Highway NH-48', timestamp: new Date(Date.now() - 3600000).toISOString() },
-            ])
+            // Fetch actual audit logs
+            const auditRes = await fetch('/api/audit-logs?limit=10', { headers })
+            const auditData = await auditRes.json()
+            if (auditData.success) {
+                const mappedLogs = auditData.data.map((log: any) => ({
+                    id: log._id,
+                    type: log.entityType.toLowerCase(),
+                    title: log.action,
+                    description: log.message,
+                    timestamp: log.timestamp
+                }))
+                setAuditLogs(mappedLogs)
+            }
         } catch (error) {
             console.error('Failed to fetch data:', error)
         } finally {
@@ -116,14 +124,24 @@ export default function PMDashboard() {
                 </motion.button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Project Insights (Material Component) */}
+            <ProjectInsights
+                stats={{
+                    activeProjects: stats.activeProjects,
+                    totalBudget: projects.reduce((acc, p) => acc + (p.budget || 0), 0),
+                    teamSize: stats.teamMembers,
+                    efficiency: 85 // Mock for now
+                }}
+            />
+
+            {/* Stats (Alternative View) */}
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard title="My Projects" value={stats.projects} icon={FolderKanban} color="blue" />
                 <StatCard title="Active" value={stats.activeProjects} icon={TrendingUp} color="green" />
                 <StatCard title="Pending Reports" value={stats.pendingReports} icon={FileText} color="orange" />
                 <StatCard title="Pending Bids" value={stats.pendingBids} icon={DollarSign} color="purple" />
                 <StatCard title="Team Size" value={stats.teamMembers} icon={Users} color="blue" />
-            </div>
+            </div> */}
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -189,7 +207,7 @@ export default function PMDashboard() {
 
                 {/* Activity */}
                 <div>
-                    <ActivityFeed activities={activities} />
+                    <ActivityFeed activities={auditLogs} title="Recent Audit Logs" />
                 </div>
             </div>
 

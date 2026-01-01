@@ -1,4 +1,4 @@
-// Review Step - Step 2 of Creation Wizard
+// Review Step - Step 3 of Creation Wizard
 "use client"
 
 import { motion } from 'framer-motion'
@@ -150,6 +150,53 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
                     <span className="font-medium text-slate-900 dark:text-white">
                         Total: ₹{totalWPBudget.toLocaleString()}
                     </span>
+                </div>
+            </div>
+
+            {/* Bidding Settings Section */}
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <DollarSign size={20} />
+                        Bidding Settings
+                    </h3>
+                    <button
+                        onClick={() => onEdit(2)}
+                        className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                    >
+                        <Edit2 size={14} />
+                        Edit
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InfoItem
+                        icon={Building2}
+                        label="Bidding Mode"
+                        value={data.biddingMode === 'OPEN' ? 'Open Bidding' : 'Invite Only'}
+                    />
+                    <InfoItem
+                        icon={Tag}
+                        label="Submission"
+                        value={data.biddingEnabled ? 'Enabled' : 'Disabled'}
+                    />
+                    <InfoItem
+                        icon={Calendar}
+                        label="Starts"
+                        value={data.biddingStartDate || '-'}
+                    />
+                    <InfoItem
+                        icon={Calendar}
+                        label="Ends"
+                        value={data.biddingEndDate || '-'}
+                    />
+                    {data.biddingMode === 'INVITE_ONLY' && (
+                        <InfoItem
+                            icon={Users}
+                            label="Invited Vendors"
+                            value={`${(data as any).allowedVendorIds?.length || 0} selected`}
+                        />
+                    )}
                 </div>
             </div>
 

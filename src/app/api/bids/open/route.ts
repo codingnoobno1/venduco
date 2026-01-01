@@ -13,12 +13,30 @@ export async function GET(request: NextRequest) {
 
         await dbConnect()
 
+        const now = new Date()
+
         // Get projects in PLANNING or ACTIVE status that accept bids
         const projects = await Project.find({
             status: { $in: [ProjectStatus.PLANNING, ProjectStatus.ACTIVE] },
             deletedAt: { $exists: false },
+            biddingEnabled: true,
+            biddingMode: 'OPEN',
+            $and: [
+                {
+                    $or: [
+                        { biddingStartDate: { $exists: false } },
+                        { biddingStartDate: { $lte: now } }
+                    ]
+                },
+                {
+                    $or: [
+                        { biddingEndDate: { $exists: false } },
+                        { biddingEndDate: { $gte: now } }
+                    ]
+                }
+            ]
         })
-            .select('name projectCode location description budget startDate deadline status createdAt')
+            .select('name projectCode location description budget startDate deadline status createdAt biddingEndDate')
             .sort({ createdAt: -1 })
             .lean()
 

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
-import { Bid, BidStatus, User, Notification, NotificationType, ProjectMember, MemberRole } from '@/models'
+import { Bid, BidStatus, User, Notification, NotificationType, ProjectMember, MemberRole, AuditLog, AuditAction } from '@/models'
 
 // GET single bid
 export async function GET(
@@ -81,6 +81,8 @@ export async function PUT(
 
         let updateData: any = {}
         let notificationData: any = null
+        let auditAction: AuditAction | null = null
+        let auditDescription = ''
 
         switch (action) {
             case 'APPROVE':
@@ -97,6 +99,9 @@ export async function PUT(
                     reviewNotes,
                     contactVisible: true, // Reveal contact info on approval
                 }
+
+                auditAction = AuditAction.APPROVE
+                auditDescription = `Approved bid from ${bid.bidderName} for project ${bid.projectName}`
 
                 // Auto-add bidder as project member
                 try {
@@ -146,6 +151,9 @@ export async function PUT(
                     contactVisible: false,
                 }
 
+                auditAction = AuditAction.REJECT
+                auditDescription = `Rejected bid from ${bid.bidderName} for project ${bid.projectName}. Reason: ${rejectionReason || 'Not selected'}`
+
                 notificationData = {
                     userId: bid.bidderId,
                     type: NotificationType.REPORT_REJECTED,
@@ -172,6 +180,8 @@ export async function PUT(
                 updateData = {
                     status: BidStatus.WITHDRAWN,
                 }
+                auditAction = AuditAction.DELETE
+                auditDescription = `Withdrew own bid for project ${bid.projectName}`
                 break
 
             default:
@@ -186,6 +196,25 @@ export async function PUT(
         // Send notification
         if (notificationData) {
             await Notification.create(notificationData)
+        }
+
+        // Create audit log
+        if (auditAction && user) {
+            await AuditLog.create({
+                userId: payload.userId,
+                userName: user.name,
+                userRole: user.requestedRole,
+                action: auditAction,
+                entityType: 'BID',
+                entityId: bidId,
+                entityName: bid.projectName,
+                description: auditDescription,
+                changes: {
+                    before: { status: bid.status },
+                    after: { status: updateData.status },
+                    fields: ['status']
+                }
+            })
         }
 
         return NextResponse.json({

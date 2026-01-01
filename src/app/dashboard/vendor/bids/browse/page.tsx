@@ -11,6 +11,7 @@ import {
     DollarSign,
     Building2,
     Briefcase,
+    Clock,
 } from 'lucide-react'
 import { ProjectCard } from '@/components/dashboard/shared/ProjectCard'
 import { StatusBadge } from '@/components/dashboard/shared/StatusBadge'
@@ -121,6 +122,12 @@ export default function BrowseProjectsPage() {
                                         {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'TBD'}
                                     </span>
                                 </div>
+                                {project.biddingEndDate && (
+                                    <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-medium">
+                                        <Clock size={14} />
+                                        <span>Bidding ends: {new Date(project.biddingEndDate).toLocaleDateString()}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">

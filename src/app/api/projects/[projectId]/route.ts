@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
-import { Project } from '@/models'
+import { Project, BidInvitation, InvitationStatus, User, Notification, NotificationType, NotificationPriority } from '@/models'
 
 // GET single project
 export async function GET(
@@ -49,7 +49,8 @@ export async function PUT(
 
         const allowedFields = [
             'name', 'projectCode', 'location', 'address', 'description',
-            'startDate', 'endDate', 'budget', 'status', 'progress'
+            'startDate', 'endDate', 'budget', 'status', 'progress',
+            'biddingMode', 'biddingEnabled', 'biddingStartDate', 'biddingEndDate', 'allowedVendorIds'
         ]
 
         const updateData: any = {}
@@ -59,6 +60,7 @@ export async function PUT(
             }
         })
 
+        const oldProject = await Project.findById(projectId).select('allowedVendorIds name projectCode').lean()
         const project = await Project.findByIdAndUpdate(projectId, updateData, { new: true }).lean()
 
         if (!project) {
@@ -66,6 +68,61 @@ export async function PUT(
                 { success: false, error: 'NOT_FOUND', message: 'Project not found' },
                 { status: 404 }
             )
+        }
+
+        // If vendors were added, create new invitations
+        if (updateData.allowedVendorIds && oldProject) {
+            const oldVendors = oldProject.allowedVendorIds || []
+            const newVendors = updateData.allowedVendorIds.filter((id: string) => !oldVendors.includes(id))
+
+            if (newVendors.length > 0) {
+                try {
+                    const vendors = await User.find({ _id: { $in: newVendors } }).select('name email phone').lean()
+                    const pm = await User.findById(payload.userId).select('name').lean()
+
+                    const invitationsData = vendors.map(vendor => ({
+                        projectId: project._id,
+                        projectName: project.name,
+                        projectCode: project.projectCode,
+                        vendorId: vendor._id,
+                        vendorName: vendor.name,
+                        vendorEmail: vendor.email,
+                        vendorPhone: vendor.phone,
+                        status: InvitationStatus.PENDING,
+                        invitedBy: payload.userId,
+                        invitedByName: pm?.name || 'Project Manager',
+                        invitedAt: new Date(),
+                    }))
+
+                    if (invitationsData.length > 0) {
+                        await BidInvitation.insertMany(invitationsData, { ordered: false }).catch(err => {
+                            // Ignore duplicates if they somehow happen
+                            console.error('Some invitations already exist')
+                        })
+
+                        // Create Notifications for each new vendor
+                        const notificationsData = vendors.map(vendor => ({
+                            userId: vendor._id,
+                            type: NotificationType.BID_INVITATION,
+                            title: 'New Bid Invitation',
+                            message: `You have been invited to bid on project: ${project.name}`,
+                            priority: NotificationPriority.NORMAL,
+                            data: {
+                                entityType: 'PROJECT',
+                                entityId: project._id,
+                                projectCode: project.projectCode,
+                                actionUrl: `/dashboard/vendor/bids/invitations`,
+                            },
+                        }))
+
+                        if (notificationsData.length > 0) {
+                            await Notification.insertMany(notificationsData)
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to create invitations for new vendors:', err)
+                }
+            }
         }
 
         return NextResponse.json({

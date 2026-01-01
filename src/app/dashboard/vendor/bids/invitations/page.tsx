@@ -18,12 +18,14 @@ import {
 import { StatCard } from '@/components/dashboard/shared/StatCard'
 import { LoadingSkeleton } from '@/components/dashboard/shared/LoadingSkeleton'
 import { EmptyState } from '@/components/dashboard/shared/EmptyState'
+import { BidForm } from '@/components/dashboard/shared/BidForm'
 
 export default function VendorBidInvitationsPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [invitations, setInvitations] = useState<any[]>([])
     const [responding, setResponding] = useState<string | null>(null)
+    const [selectedProject, setSelectedProject] = useState<any>(null)
 
     useEffect(() => {
         fetchInvitations()
@@ -44,7 +46,10 @@ export default function VendorBidInvitationsPage() {
         }
     }
 
-    async function respondToInvite(inviteId: string, projectId: string, action: 'ACCEPT' | 'DECLINE') {
+    async function respondToInvite(invite: any, action: 'ACCEPT' | 'DECLINE') {
+        const inviteId = invite._id
+        const projectId = invite.projectId
+
         setResponding(inviteId)
         const token = localStorage.getItem('token')
         try {
@@ -53,6 +58,11 @@ export default function VendorBidInvitationsPage() {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action })
             })
+
+            if (action === 'ACCEPT') {
+                setSelectedProject(invite.project)
+            }
+
             fetchInvitations()
         } catch (error) {
             console.error('Failed to respond:', error)
@@ -140,24 +150,31 @@ export default function VendorBidInvitationsPage() {
                                                 "{invite.message}"
                                             </p>
                                         )}
+
+                                        {invite.isBiddingLocked && (
+                                            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+                                                <XCircle size={16} />
+                                                <span>{invite.lockReason}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div className="flex gap-3 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                                     <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => respondToInvite(invite._id, invite.projectId, 'ACCEPT')}
-                                        disabled={responding === invite._id}
-                                        className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                                        whileHover={!invite.isBiddingLocked ? { scale: 1.02 } : {}}
+                                        whileTap={!invite.isBiddingLocked ? { scale: 0.98 } : {}}
+                                        onClick={() => respondToInvite(invite, 'ACCEPT')}
+                                        disabled={responding === invite._id || invite.isBiddingLocked}
+                                        className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale"
                                     >
                                         <CheckCircle2 size={18} />
-                                        Accept & Submit Bid
+                                        {invite.isBiddingLocked ? 'Bidding Locked' : 'Accept & Submit Bid'}
                                     </motion.button>
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        onClick={() => respondToInvite(invite._id, invite.projectId, 'DECLINE')}
+                                        onClick={() => respondToInvite(invite, 'DECLINE')}
                                         disabled={responding === invite._id}
                                         className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium flex items-center gap-2"
                                     >
@@ -187,13 +204,13 @@ export default function VendorBidInvitationsPage() {
                                     <p className="font-medium">{invite.projectName}</p>
                                     <p className="text-sm text-slate-500">{invite.projectCode}</p>
                                 </div>
-                                <Link
-                                    href={`/dashboard/vendor/bids/${invite.projectId}/submit`}
+                                <button
+                                    onClick={() => setSelectedProject(invite.project)}
                                     className="px-4 py-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-sm font-medium flex items-center gap-2"
                                 >
                                     Submit Bid
                                     <ArrowRight size={16} />
-                                </Link>
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -207,6 +224,35 @@ export default function VendorBidInvitationsPage() {
                     title="No bid invitations"
                     description="You'll see invitations here when PMs invite you to bid on their projects"
                 />
+            )}
+            {/* Bid Form Modal */}
+            {selectedProject && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-auto">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto"
+                    >
+                        <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-800">
+                            <div>
+                                <h2 className="text-lg font-semibold">Submit Bid</h2>
+                                <p className="text-sm text-slate-500">{selectedProject.name}</p>
+                            </div>
+                            <button onClick={() => setSelectedProject(null)} className="p-2 hover:bg-slate-100 rounded-lg">✕</button>
+                        </div>
+                        <div className="p-6">
+                            <BidForm
+                                projectId={selectedProject._id}
+                                projectName={selectedProject.name}
+                                projectBudget={selectedProject.budget}
+                                onSuccess={() => {
+                                    setSelectedProject(null)
+                                    fetchInvitations()
+                                }}
+                            />
+                        </div>
+                    </motion.div>
+                </div>
             )}
         </div>
     )

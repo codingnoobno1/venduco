@@ -24,6 +24,7 @@ export { WorkLog, WorkLogType, type IWorkLog } from './WorkLog'
 
 // Bidding
 export { Bid, BidStatus, BidderType, type IBid } from './Bid'
+export { BidInvitation, InvitationStatus, type IBidInvitation } from './BidInvitation'
 
 // Communication
 export { ChatMessage, type IChatMessage } from './ChatMessage'
