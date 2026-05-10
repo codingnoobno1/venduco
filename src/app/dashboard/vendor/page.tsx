@@ -45,6 +45,8 @@ export default function VendorDashboard() {
         approvedBids: 0,
         rentalRequests: 0,
         earnings: 0,
+        totalLabour: 0,
+        activeTeams: 0,
     })
 
     useEffect(() => {
@@ -87,6 +89,8 @@ export default function VendorDashboard() {
                 approvedBids: (bidsData.data || []).filter((b: any) => b.status === 'APPROVED').length,
                 rentalRequests: (rentalsData.data || []).filter((r: any) => r.status === 'REQUESTED').length,
                 earnings: 125000, // Placeholder
+                totalLabour: 142, // Mock
+                activeTeams: 12,  // Mock
             })
 
             // Fetch real activities from audit logs
@@ -172,6 +176,7 @@ export default function VendorDashboard() {
                     color="purple"
                     trend={{ value: 15, isUp: true }}
                 />
+                <StatCard title="Active Workforce" value={stats.totalLabour} icon={Briefcase} color="indigo" />
             </div>
 
             {/* Quick Actions */}
@@ -203,6 +208,27 @@ export default function VendorDashboard() {
                     icon={FolderKanban}
                     color="purple"
                     onClick={() => router.push('/dashboard/vendor/assignments')}
+                />
+                <QuickAction
+                    title="Workforce"
+                    description="Manage labour & teams"
+                    icon={Briefcase}
+                    color="indigo"
+                    onClick={() => router.push('/dashboard/vendor/labour')}
+                />
+                <QuickAction
+                    title="Marketplace"
+                    description="Hire & rent public"
+                    icon={TrendingUp}
+                    color="orange"
+                    onClick={() => router.push('/dashboard/vendor/marketplace')}
+                />
+                <QuickAction
+                    title="Supervisors"
+                    description="Site leads management"
+                    icon={User}
+                    color="green"
+                    onClick={() => router.push('/dashboard/vendor/supervisors')}
                 />
             </div>
 

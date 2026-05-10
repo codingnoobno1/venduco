@@ -11,6 +11,8 @@ import {
     Truck,
     ArrowUpRight,
     ArrowDownRight,
+    Users,
+    Briefcase
 } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/shared/StatCard'
 import { DataTable } from '@/components/dashboard/shared/DataTable'
@@ -68,6 +70,8 @@ export default function VendorEarningsPage() {
                 thisMonth: total * 0.4, // Mock distribution
                 lastMonth: total * 0.35,
                 pending: pendingAmount,
+                labourEarnings: total * 0.45, // Added mock labour earnings
+                teamEarnings: total * 0.3,   // Added mock team earnings
                 transactions,
             })
         } catch (error) {
@@ -143,22 +147,21 @@ export default function VendorEarningsPage() {
 
             {/* Earnings Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* By Machine Type */}
+                {/* By Source */}
                 <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Earnings by Machine Type</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Earnings by Source</h3>
                     <div className="space-y-4">
                         {[
-                            { type: 'Excavator', amount: earnings.total * 0.35, percent: 35 },
-                            { type: 'Tower Crane', amount: earnings.total * 0.28, percent: 28 },
-                            { type: 'Bulldozer', amount: earnings.total * 0.22, percent: 22 },
-                            { type: 'Others', amount: earnings.total * 0.15, percent: 15 },
+                            { type: 'Machine Rentals', amount: earnings.total, percent: 50 },
+                            { type: 'Labour Supply', amount: earnings.labourEarnings || 0, percent: 30 },
+                            { type: 'Team Contracts', amount: earnings.teamEarnings || 0, percent: 20 },
                         ].map(item => (
                             <div key={item.type}>
                                 <div className="flex justify-between text-sm mb-1">
                                     <span>{item.type}</span>
                                     <span className="font-medium">₹{item.amount.toLocaleString()}</span>
                                 </div>
-                                <ProgressBar value={item.percent} color="blue" size="sm" />
+                                <ProgressBar value={item.percent} color="indigo" size="sm" />
                             </div>
                         ))}
                     </div>
