@@ -23,6 +23,19 @@ import {
 export default function VendorLabourPage() {
     const [activeTab, setActiveTab] = useState<'jobs' | 'workers' | 'teams' | 'attendance'>('jobs')
     const [showCreateJob, setShowCreateJob] = useState(false)
+    const [vendorId, setVendorId] = useState('')
+
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]))
+                setVendorId(payload.userId)
+            } catch (e) {
+                console.error('Failed to parse token:', e)
+            }
+        }
+    }, [])
 
     return (
         <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8">
@@ -90,16 +103,191 @@ export default function VendorLabourPage() {
 
             {/* Main Content Area */}
             <div className="grid grid-cols-1 gap-6">
-                {activeTab === 'jobs' && <JobsList />}
+                {activeTab === 'jobs' && <JobsList key={showCreateJob ? 'refreshing' : 'stable'} />}
                 {activeTab === 'workers' && <WorkforceList />}
                 {activeTab === 'teams' && <TeamsList />}
                 {activeTab === 'attendance' && <AttendanceView />}
+            </div>
+
+            {/* Create Job Modal */}
+            {showCreateJob && (
+                <CreateJobModal 
+                    onClose={() => setShowCreateJob(false)} 
+                    vendorId={vendorId}
+                />
+            )}
+        </div>
+    )
+}
+
+function CreateJobModal({ onClose, vendorId }: { onClose: () => void, vendorId: string }) {
+    const [formData, setFormData] = useState({
+        title: '',
+        location: '',
+        city: '',
+        skillsRequired: '',
+        salaryPerDay: '',
+        duration: '',
+        joiningDate: '',
+        accommodation: false,
+    })
+    const [loading, setLoading] = useState(false)
+
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        setLoading(true)
+        try {
+            const res = await fetch('/api/mobile/labour/jobs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...formData,
+                    vendorId,
+                    skillsRequired: formData.skillsRequired.split(',').map(s => s.trim()),
+                    salaryPerDay: Number(formData.salaryPerDay)
+                })
+            })
+            const data = await res.json()
+            if (data.success) {
+                onClose()
+            } else {
+                alert(data.message)
+            }
+        } catch (err) {
+            console.error('Failed to create job:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
+                <div className="p-6 border-b border-white/5 flex justify-between items-center">
+                    <h2 className="text-xl font-bold">Create New Job Opening</h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase">Job Title</label>
+                            <input 
+                                required
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all"
+                                placeholder="e.g. Need 10 Welder Helpers"
+                                value={formData.title}
+                                onChange={e => setFormData({...formData, title: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase">Site Location</label>
+                            <input 
+                                required
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all"
+                                placeholder="e.g. Metro Site, Sector 5"
+                                value={formData.location}
+                                onChange={e => setFormData({...formData, location: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase">City</label>
+                            <input 
+                                required
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all"
+                                placeholder="e.g. Mumbai"
+                                value={formData.city}
+                                onChange={e => setFormData({...formData, city: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase">Skills (Comma separated)</label>
+                            <input 
+                                required
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all"
+                                placeholder="Welder, Fitter, Helper"
+                                value={formData.skillsRequired}
+                                onChange={e => setFormData({...formData, skillsRequired: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase">Daily Wage (₹)</label>
+                            <input 
+                                required
+                                type="number"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all"
+                                placeholder="800"
+                                value={formData.salaryPerDay}
+                                onChange={e => setFormData({...formData, salaryPerDay: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase">Duration</label>
+                            <input 
+                                required
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all"
+                                placeholder="e.g. 30 Days"
+                                value={formData.duration}
+                                onChange={e => setFormData({...formData, duration: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-500 uppercase">Joining Date</label>
+                            <input 
+                                required
+                                type="date"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all"
+                                value={formData.joiningDate}
+                                onChange={e => setFormData({...formData, joiningDate: e.target.value})}
+                            />
+                        </div>
+                        <div className="flex items-center gap-3 pt-6">
+                            <input 
+                                type="checkbox"
+                                id="accommodation"
+                                className="w-5 h-5 rounded border-white/10 bg-white/5"
+                                checked={formData.accommodation}
+                                onChange={e => setFormData({...formData, accommodation: e.target.checked})}
+                            />
+                            <label htmlFor="accommodation" className="text-sm text-gray-400">Accommodation Provided</label>
+                        </div>
+                    </div>
+                    <div className="pt-4">
+                        <button 
+                            disabled={loading}
+                            type="submit"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all shadow-xl shadow-blue-900/20 flex items-center justify-center gap-2"
+                        >
+                            {loading ? 'Publishing...' : <><Send size={18} /> Publish Opening</>}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     )
 }
 
 function JobsList() {
+    const [jobs, setJobs] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        fetchJobs()
+    }, [])
+
+    async function fetchJobs() {
+        try {
+            const res = await fetch('/api/mobile/labour/jobs')
+            const data = await res.json()
+            if (data.success) setJobs(data.data)
+        } catch (err) {
+            console.error('Failed to fetch jobs:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (loading) return <div className="text-gray-500 py-12 text-center">Loading job openings...</div>
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#111] p-4 rounded-xl border border-white/5">
@@ -111,59 +299,61 @@ function JobsList() {
                         className="bg-transparent border-none outline-none text-white w-full"
                     />
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="p-2 hover:bg-white/5 rounded-lg text-gray-400"><Filter size={20} /></button>
-                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="bg-[#111] border border-white/5 p-6 rounded-2xl hover:border-blue-500/30 transition-all group">
+                {jobs.map(job => (
+                    <div key={job.jobId} className="bg-[#111] border border-white/5 p-6 rounded-2xl hover:border-blue-500/30 transition-all group">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <span className="text-[10px] uppercase tracking-wider text-blue-400 font-bold mb-1 block">Active Opening</span>
-                                <h3 className="text-xl font-bold group-hover:text-blue-400 transition-colors">Need 15 Helpers - Metro Line 4</h3>
+                                <span className="text-[10px] uppercase tracking-wider text-blue-400 font-bold mb-1 block">
+                                    {job.status || 'Active Opening'}
+                                </span>
+                                <h3 className="text-xl font-bold group-hover:text-blue-400 transition-colors">{job.title}</h3>
                                 <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
-                                    <span className="flex items-center gap-1"><MapPin size={14} /> Thane, MH</span>
-                                    <span className="flex items-center gap-1"><Users size={14} /> 8/15 Applied</span>
+                                    <span className="flex items-center gap-1"><MapPin size={14} /> {job.location}</span>
+                                    <span className="flex items-center gap-1"><Users size={14} /> 0 Applied</span>
                                 </div>
                             </div>
-                            <button className="text-gray-500 hover:text-white transition-colors"><MoreVertical size={20} /></button>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4 mb-6">
                             <div className="bg-white/5 p-3 rounded-xl text-center">
                                 <p className="text-xs text-gray-500 uppercase">Daily Wage</p>
-                                <p className="font-bold text-lg">₹850</p>
+                                <p className="font-bold text-lg">₹{job.salaryPerDay}</p>
                             </div>
                             <div className="bg-white/5 p-3 rounded-xl text-center">
                                 <p className="text-xs text-gray-500 uppercase">Duration</p>
-                                <p className="font-bold text-lg">45 Days</p>
+                                <p className="font-bold text-lg">{job.duration}</p>
                             </div>
                         </div>
 
-                        <div className="flex gap-2 mb-6">
-                            <span className="flex items-center gap-1.5 text-[10px] bg-white/5 px-2 py-1 rounded font-bold text-gray-400">
-                                <Home size={10} /> Accommodation
-                            </span>
-                            <span className="flex items-center gap-1.5 text-[10px] bg-white/5 px-2 py-1 rounded font-bold text-gray-400">
-                                <Utensils size={10} /> Food Included
-                            </span>
+                        <div className="flex gap-2 mb-6 flex-wrap">
+                            {job.accommodation && (
+                                <span className="flex items-center gap-1.5 text-[10px] bg-white/5 px-2 py-1 rounded font-bold text-gray-400">
+                                    <Home size={10} /> Accommodation
+                                </span>
+                            )}
+                            {job.skillsRequired?.map((skill: string) => (
+                                <span key={skill} className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded font-bold uppercase">
+                                    {skill}
+                                </span>
+                            ))}
                         </div>
 
-                        <div className="flex items-center justify-between">
-                            <div className="flex -space-x-2">
-                                {[1, 2, 3].map(j => (
-                                    <div key={j} className="w-8 h-8 rounded-full border-2 border-[#111] bg-gray-800 flex items-center justify-center text-[10px] font-bold">RK</div>
-                                ))}
-                                <div className="w-8 h-8 rounded-full border-2 border-[#111] bg-gray-700 flex items-center justify-center text-[10px] font-bold">+5</div>
-                            </div>
+                        <div className="flex items-center justify-end">
                             <button className="flex items-center gap-2 text-blue-400 text-sm font-bold hover:underline">
-                                View Applicants <ChevronRight size={16} />
+                                View Details <ChevronRight size={16} />
                             </button>
                         </div>
                     </div>
                 ))}
+                {jobs.length === 0 && (
+                    <div className="col-span-2 py-20 text-center bg-[#111] rounded-2xl border border-dashed border-white/10">
+                        <Briefcase size={40} className="mx-auto mb-4 text-gray-600" />
+                        <p className="text-gray-500">No job openings published yet.</p>
+                    </div>
+                )}
             </div>
         </div>
     )
