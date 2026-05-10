@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import dbConnect from '@/lib/db'
-import { SpecialisedWork } from '@/models/SpecialisedWork'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
+import { INDUSTRY_WORK_TYPES } from '@/lib/constants/industryWorks'
 
 export async function GET(request: NextRequest) {
     try {
         const payload = verifyToken(request)
         if (!payload) return unauthorizedResponse()
 
-        await dbConnect()
-        const works = await SpecialisedWork.find().sort({ category: 1, name: 1 }).lean()
-
+        // Return the static list of industry works
+        // In a real app this might be in a DB, but for now the constant is sufficient source of truth
         return NextResponse.json({
             success: true,
-            data: works
+            data: INDUSTRY_WORK_TYPES
         })
     } catch (error: any) {
         return NextResponse.json(

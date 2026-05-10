@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
-import { VendorExperienceProfile } from '@/models/VendorExperienceProfile'
+import VendorExperienceProfile from '@/models/VendorExperienceProfile'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
 
 // GET my vendor profile
@@ -31,14 +31,17 @@ export async function POST(request: NextRequest) {
         if (!payload) return unauthorizedResponse()
 
         // Only VENDOR role can maintain a profile
-        if (payload.role !== 'VENDOR' && payload.role !== 'ADMIN') {
+        if (payload.role !== 'VENDOR' && payload.role !== 'ADMIN' && payload.role !== 'COMPANY_REP') {
+            console.log('UNAUTHORIZED ROLE ACCESS ATTEMPT:', payload)
             return NextResponse.json(
-                { success: false, message: 'Only vendors can maintain profiles' },
+                { success: false, message: `Only vendors can maintain profiles. Your role: ${payload.role}` },
                 { status: 403 }
             )
         }
 
         const body = await request.json()
+        console.log('PROFILE UPDATE BODY:', JSON.stringify(body.representativeProfile, null, 2))
+
         await dbConnect()
 
         const profile = await VendorExperienceProfile.findOneAndUpdate(
@@ -46,6 +49,7 @@ export async function POST(request: NextRequest) {
             { $set: { ...body, vendorId: payload.userId } },
             { upsert: true, new: true, runValidators: true }
         )
+        console.log('PROFILE SAVED RESULT:', JSON.stringify(profile.representativeProfile, null, 2))
 
         return NextResponse.json({
             success: true,

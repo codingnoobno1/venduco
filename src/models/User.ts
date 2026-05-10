@@ -18,6 +18,7 @@ export enum UserRole {
     SUPERVISOR = 'SUPERVISOR',
     COMPANY_REP = 'COMPANY_REP',
     ADMIN = 'ADMIN',
+    LABOUR = 'LABOUR',
 }
 
 export interface IUser extends Document {
@@ -65,6 +66,12 @@ export interface IUser extends Document {
     skillCategories?: string[]
     workingUnderType?: string
     workingUnderName?: string
+
+    // Labour Details
+    labourSkills?: string[]
+    labourExperience?: number
+    isAvailable?: boolean
+    currentTeamId?: string
 
     // Verification
     submittedAt?: Date
@@ -144,6 +151,12 @@ const UserSchema = new Schema<IUser>(
         skillCategories: [{ type: String }],
         workingUnderType: { type: String },
         workingUnderName: { type: String, trim: true },
+
+        // Labour Details
+        labourSkills: [{ type: String }],
+        labourExperience: { type: Number },
+        isAvailable: { type: Boolean, default: true },
+        currentTeamId: { type: String },
 
         // Verification
         submittedAt: { type: Date },

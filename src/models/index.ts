@@ -61,6 +61,10 @@ export { ProjectOutcomeReview, type IProjectOutcomeReview } from './ProjectOutco
 // Team & Organization Hierarchy
 export { OrganizationAffiliation, EmploymentType, type IOrganizationAffiliation } from './OrganizationAffiliation'
 export { ProjectTeam, type IProjectTeam } from './ProjectTeam'
+export { LabourJob, type ILabourJob } from './LabourJob'
+export { LabourApplication, type ILabourApplication } from './LabourApplication'
+export { LabourTeam, type ILabourTeam } from './LabourTeam'
+export { Attendance, type IAttendance } from './Attendance'
 
 // User Profiles
 export { UserProfile, type IUserProfile, type IExperience, type IAuthorization, type IProjectHistory } from './UserProfile'

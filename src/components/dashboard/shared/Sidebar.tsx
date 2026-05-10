@@ -23,6 +23,8 @@ import {
     ChevronLeft,
     ChevronRight,
     LogOut,
+    User,
+    Sparkles,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -76,8 +78,10 @@ const roleMenus: Record<string, any[]> = {
         { name: 'Rental Requests', href: '/dashboard/vendor/requests', icon: DollarSign },
         { name: 'Bidding', href: '/dashboard/vendor/bids', icon: DollarSign },
         { name: 'Maintenance', href: '/dashboard/vendor/maintenance', icon: Hammer },
+        { name: 'Profile', href: '/dashboard/vendor/profile', icon: User },
         { name: 'Assignments', href: '/dashboard/vendor/assignments', icon: FolderKanban },
         { name: 'Earnings', href: '/dashboard/vendor/earnings', icon: DollarSign },
+        { name: 'AI Proposal Maker', href: '/dashboard/vendor/ai-proposal', icon: Sparkles },
     ],
     COMPANY_REP: [
         { name: 'Dashboard', href: '/dashboard/company', icon: LayoutDashboard },
