@@ -161,7 +161,7 @@ export default function VendorEarningsPage() {
                                     <span>{item.type}</span>
                                     <span className="font-medium">₹{item.amount.toLocaleString()}</span>
                                 </div>
-                                <ProgressBar value={item.percent} color="indigo" size="sm" />
+                                <ProgressBar value={item.percent} color="blue" size="sm" />
                             </div>
                         ))}
                     </div>
