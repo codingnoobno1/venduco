@@ -310,10 +310,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
                     {/* Activity */}
                     <div>
                         <ActivityFeed
-                            activities={[
-                                { id: '1', type: 'report', title: 'Daily report submitted', timestamp: new Date().toISOString() },
-                                { id: '2', type: 'bid', title: 'New bid received', timestamp: new Date(Date.now() - 3600000).toISOString() },
-                            ]}
+                            activities={[]}
                         />
                     </div>
                 </div>
