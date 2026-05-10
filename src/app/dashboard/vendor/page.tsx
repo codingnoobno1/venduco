@@ -176,7 +176,7 @@ export default function VendorDashboard() {
                     color="purple"
                     trend={{ value: 15, isUp: true }}
                 />
-                <StatCard title="Active Workforce" value={stats.totalLabour} icon={Briefcase} color="indigo" />
+                <StatCard title="Active Workforce" value={stats.totalLabour} icon={Briefcase} color="blue" />
             </div>
 
             {/* Quick Actions */}
@@ -213,7 +213,7 @@ export default function VendorDashboard() {
                     title="Workforce"
                     description="Manage labour & teams"
                     icon={Briefcase}
-                    color="indigo"
+                    color="blue"
                     onClick={() => router.push('/dashboard/vendor/labour')}
                 />
                 <QuickAction

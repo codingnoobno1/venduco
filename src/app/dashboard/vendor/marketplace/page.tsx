@@ -15,7 +15,9 @@ import {
     ExternalLink,
     ChevronRight,
     ArrowUpRight,
-    Briefcase
+    Briefcase,
+    Heart,
+    Navigation
 } from 'lucide-react'
 
 export default function VendorMarketplacePage() {
