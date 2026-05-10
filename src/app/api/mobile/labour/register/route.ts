@@ -29,8 +29,8 @@ export async function POST(req: Request) {
             city,
             passwordHash: hashedPassword,
             requestedRole: UserRole.LABOUR,
-            labourSkills: skills,
-            labourExperience: experience,
+            skills: skills,
+            experience: experience,
             isAvailable: true
         })
 
