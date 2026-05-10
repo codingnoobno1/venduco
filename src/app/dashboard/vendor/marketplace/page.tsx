@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
     Search, 
     Filter, 
@@ -22,6 +22,39 @@ import {
 
 export default function VendorMarketplacePage() {
     const [activeCategory, setActiveCategory] = useState<'all' | 'labour' | 'machines' | 'materials'>('all')
+    const [jobs, setJobs] = useState<any[]>([])
+    const [vendors, setVendors] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        fetchData()
+    }, [])
+
+    async function fetchData() {
+        setLoading(true)
+        const token = localStorage.getItem('token')
+        const headers = { Authorization: `Bearer ${token}` }
+
+        try {
+            // Fetch Urgent Hiring Feed (Jobs)
+            const jobsRes = await fetch('/api/mobile/labour/jobs', { headers })
+            const jobsData = await jobsRes.json()
+            if (jobsData.success) {
+                setJobs(jobsData.data || [])
+            }
+
+            // Fetch Featured Vendors
+            const vendorsRes = await fetch('/api/vendors?limit=4', { headers })
+            const vendorsData = await vendorsRes.json()
+            if (vendorsData.success) {
+                setVendors(vendorsData.data || [])
+            }
+        } catch (error) {
+            console.error('Failed to fetch marketplace data:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
@@ -92,34 +125,39 @@ export default function VendorMarketplacePage() {
                     </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[
-                        { title: 'Need 25 Helpers Today', location: 'Thane West', wage: '₹950', duration: 'Immediate', tags: ['URGENT', 'CASH_DAILY'] },
-                        { title: 'Experienced JCB Operator', location: 'Navi Mumbai', wage: '₹1200', duration: '3 Months', tags: ['OPERATOR', 'METRO'] },
-                        { title: '15 Masons for Highway', location: 'Pune Bypass', wage: '₹1100', duration: '6 Months', tags: ['LONG_TERM'] },
-                    ].map((job, i) => (
-                        <div key={i} className="bg-white dark:bg-slate-900 border border-orange-100 dark:border-orange-900/30 p-6 rounded-2xl relative overflow-hidden group hover:border-orange-500/50 transition-all shadow-sm hover:shadow-md">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex gap-2">
-                                    {job.tags.map(t => (
-                                        <span key={t} className="bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-[10px] px-2 py-0.5 rounded-md font-bold">{t}</span>
-                                    ))}
+                    {loading ? (
+                        [1, 2, 3].map(i => (
+                            <div key={i} className="h-48 bg-slate-100 dark:bg-slate-900 animate-pulse rounded-2xl" />
+                        ))
+                    ) : jobs.length > 0 ? (
+                        jobs.slice(0, 3).map((job, i) => (
+                            <div key={job.jobId || i} className="bg-white dark:bg-slate-900 border border-orange-100 dark:border-orange-900/30 p-6 rounded-2xl relative overflow-hidden group hover:border-orange-500/50 transition-all shadow-sm hover:shadow-md">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex gap-2">
+                                        <span className="bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-[10px] px-2 py-0.5 rounded-md font-bold">URGENT</span>
+                                        {job.accommodation && <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] px-2 py-0.5 rounded-md font-bold">STAY</span>}
+                                    </div>
+                                    <ArrowUpRight className="text-slate-300 group-hover:text-orange-500 transition-colors" size={20} />
                                 </div>
-                                <ArrowUpRight className="text-slate-300 group-hover:text-orange-500 transition-colors" size={20} />
+                                <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">{job.title}</h3>
+                                <div className="space-y-2 mb-6">
+                                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                                        <MapPin size={14} /> {job.location}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                                        <Zap size={14} /> ₹{job.salaryPerDay} / Day • {job.duration}
+                                    </div>
+                                </div>
+                                <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-orange-200 dark:shadow-none">
+                                    Submit Bid / Apply
+                                </button>
                             </div>
-                            <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">{job.title}</h3>
-                            <div className="space-y-2 mb-6">
-                                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                    <MapPin size={14} /> {job.location}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                    <Zap size={14} /> {job.wage} / Day • {job.duration}
-                                </div>
-                            </div>
-                            <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-orange-200 dark:shadow-none">
-                                Submit Bid / Apply
-                            </button>
+                        ))
+                    ) : (
+                        <div className="col-span-3 py-12 text-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                            <p className="text-slate-500">No urgent hiring requests available</p>
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
 
@@ -163,49 +201,64 @@ export default function VendorMarketplacePage() {
                         <span className="text-slate-500 text-sm">Showing 142 results</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/30 transition-all group shadow-sm hover:shadow-md">
-                                <div className="h-32 bg-slate-100 dark:bg-slate-800 relative">
-                                    <div className="absolute -bottom-6 left-6 w-16 h-16 rounded-2xl bg-blue-600 border-4 border-white dark:border-slate-900 flex items-center justify-center text-xl font-black text-white shadow-lg">AI</div>
-                                    <div className="absolute top-4 right-4 bg-white/80 dark:bg-slate-950/40 backdrop-blur-md text-slate-900 dark:text-white text-[10px] px-3 py-1 rounded-full font-bold flex items-center gap-1 border border-slate-200 dark:border-white/10 shadow-sm">
-                                        <ShieldCheck size={12} className="text-blue-500" /> VERIFIED
-                                    </div>
-                                </div>
-                                <div className="p-6 pt-10">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Apex Infra Solutions</h3>
-                                        <div className="flex items-center gap-3">
-                                            <button className="text-slate-300 hover:text-red-500 transition-colors">
-                                                <Heart size={20} />
-                                            </button>
-                                            <div className="flex items-center gap-1 text-yellow-500">
-                                                <Star size={16} fill="currentColor" />
-                                                <span className="text-slate-900 dark:text-white text-sm font-bold">4.8</span>
-                                            </div>
+                        {loading ? (
+                            [1, 2, 3, 4].map(i => (
+                                <div key={i} className="h-64 bg-slate-100 dark:bg-slate-900 animate-pulse rounded-2xl" />
+                            ))
+                        ) : vendors.length > 0 ? (
+                            vendors.map((vendor) => (
+                                <div key={vendor._id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/30 transition-all group shadow-sm hover:shadow-md">
+                                    <div className="h-32 bg-slate-100 dark:bg-slate-800 relative">
+                                        <div className="absolute -bottom-6 left-6 w-16 h-16 rounded-2xl bg-blue-600 border-4 border-white dark:border-slate-900 flex items-center justify-center text-xl font-black text-white shadow-lg">
+                                            {vendor.businessName?.substring(0, 2).toUpperCase() || vendor.name?.substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div className="absolute top-4 right-4 bg-white/80 dark:bg-slate-950/40 backdrop-blur-md text-slate-900 dark:text-white text-[10px] px-3 py-1 rounded-full font-bold flex items-center gap-1 border border-slate-200 dark:border-white/10 shadow-sm">
+                                            <ShieldCheck size={12} className="text-blue-500" /> VERIFIED
                                         </div>
                                     </div>
-                                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-2">Specialized in heavy earthmoving and tunnel manpower.</p>
-                                    <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-bold mb-4">
-                                        <Navigation size={12} /> 2.4 km away
-                                    </div>
-                                    
-                                    <div className="flex flex-wrap gap-2 mb-6">
-                                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">150+ WORKERS</span>
-                                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">8 MACHINES</span>
-                                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">GST VERIFIED</span>
-                                    </div>
+                                    <div className="p-6 pt-10">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white truncate">{vendor.businessName || vendor.name}</h3>
+                                            <div className="flex items-center gap-3">
+                                                <button className="text-slate-300 hover:text-red-500 transition-colors">
+                                                    <Heart size={20} />
+                                                </button>
+                                                <div className="flex items-center gap-1 text-yellow-500">
+                                                    <Star size={16} fill="currentColor" />
+                                                    <span className="text-slate-900 dark:text-white text-sm font-bold">4.8</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-2 line-clamp-2">
+                                            {vendor.serviceCategories?.join(', ') || 'General Construction Services'}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-bold mb-4">
+                                            <Navigation size={12} /> {vendor.city || 'Location N/A'}
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap gap-2 mb-6">
+                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">VERIFIED</span>
+                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">GST ACTIVE</span>
+                                        </div>
 
-                                    <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
-                                        <button className="flex-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700">
-                                            <MessageSquare size={16} /> Chat
-                                        </button>
-                                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100 dark:shadow-none">
-                                            View Profile <ExternalLink size={16} />
-                                        </button>
+                                        <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
+                                            <button className="flex-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700">
+                                                <MessageSquare size={16} /> Chat
+                                            </button>
+                                            <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100 dark:shadow-none">
+                                                View Profile <ExternalLink size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="col-span-2 py-24 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                                <Users size={48} className="mx-auto mb-4 text-slate-300" />
+                                <p className="text-slate-500 font-medium">No featured vendors found</p>
+                                <p className="text-slate-400 text-sm">Check back later for verified suppliers</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>
