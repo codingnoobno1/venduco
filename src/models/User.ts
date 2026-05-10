@@ -72,6 +72,13 @@ export interface IUser extends Document {
     labourExperience?: number
     isAvailable?: boolean
     currentTeamId?: string
+    urgentAvailability?: 'AVAILABLE_TODAY' | 'AVAILABLE_TOMORROW' | 'UNAVAILABLE'
+    trustScore?: number
+    favorites?: mongoose.Types.ObjectId[] // For vendors to save workers
+    location?: {
+        type: 'Point'
+        coordinates: [number, number] // [longitude, latitude]
+    }
 
     // Verification
     submittedAt?: Date
@@ -157,6 +164,17 @@ const UserSchema = new Schema<IUser>(
         labourExperience: { type: Number },
         isAvailable: { type: Boolean, default: true },
         currentTeamId: { type: String },
+        urgentAvailability: { 
+            type: String, 
+            enum: ['AVAILABLE_TODAY', 'AVAILABLE_TOMORROW', 'UNAVAILABLE'],
+            default: 'AVAILABLE_TODAY'
+        },
+        trustScore: { type: Number, default: 100 },
+        favorites: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+        location: {
+            type: { type: String, enum: ['Point'], default: 'Point' },
+            coordinates: { type: [Number], default: [0, 0] }
+        },
 
         // Verification
         submittedAt: { type: Date },
