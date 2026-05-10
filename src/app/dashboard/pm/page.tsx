@@ -70,7 +70,7 @@ export default function PMDashboard() {
             setStats({
                 projects: myProjects.length,
                 activeProjects: myProjects.filter((p: any) => p.status === 'ACTIVE').length,
-                pendingReports: 5, // Placeholder
+                pendingReports: 0, // Should be fetched from reports API
                 pendingBids: allBids.length,
                 teamMembers: myProjects.reduce((acc: number, p: any) =>
                     acc + (p.vendorsCount || 0) + (p.supervisorsCount || 0), 0
@@ -142,7 +142,7 @@ export default function PMDashboard() {
                     activeProjects: stats.activeProjects,
                     totalBudget: projects.reduce((acc, p) => acc + (p.budget || 0), 0),
                     teamSize: stats.teamMembers,
-                    efficiency: 85 // Mock for now
+                    efficiency: stats.activeProjects > 0 ? 100 : 0 // Basic calculation
                 }}
             />
 

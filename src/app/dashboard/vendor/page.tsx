@@ -84,13 +84,13 @@ export default function VendorDashboard() {
                 totalMachines: myMachines.length,
                 available: myMachines.filter((m: any) => m.status === 'AVAILABLE').length,
                 assigned: myMachines.filter((m: any) => m.status === 'ASSIGNED').length,
-                listedForRent: 0, // From rentals
+                listedForRent: 0, 
                 pendingBids: (bidsData.data || []).filter((b: any) => b.status === 'SUBMITTED').length,
                 approvedBids: (bidsData.data || []).filter((b: any) => b.status === 'APPROVED').length,
                 rentalRequests: (rentalsData.data || []).filter((r: any) => r.status === 'REQUESTED').length,
-                earnings: 125000, // Placeholder
-                totalLabour: 142, // Mock
-                activeTeams: 12,  // Mock
+                earnings: 0, 
+                totalLabour: 0, 
+                activeTeams: 0,  
             })
 
             // Fetch real activities from audit logs
