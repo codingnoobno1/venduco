@@ -7,37 +7,27 @@ export async function POST(req: Request) {
     try {
         await dbConnect()
         const body = await req.json()
-        const { name, phone, city, skills, experience } = body
+        const { identifier, otp } = body
 
-        if (!name || !phone) {
-            return NextResponse.json({ success: false, message: 'Name and Phone are required' }, { status: 400 })
+        if (!identifier || !otp) {
+            return NextResponse.json({ success: false, message: 'Identifier and OTP are required' }, { status: 400 })
         }
 
-        // Check if user already exists
-        let user = await User.findOne({ phone })
-        if (user) {
-            return NextResponse.json({ success: false, message: 'User with this phone number already exists' }, { status: 400 })
+        // Mock OTP verification
+        if (otp !== '123456') {
+            return NextResponse.json({ success: false, message: 'Invalid OTP' }, { status: 401 })
         }
 
-        // Create new labour user
-        // Note: For labour, we might not have email/password initially, or we use a dummy one
-        // or we allow email to be optional in the model (which I should have checked)
-        // Since the model requires email, I'll use a placeholder for now or assume phone-based login
-        
-        user = await User.create({
-            name,
-            phone,
-            city,
-            email: `${phone}@venduco.com`, // Temporary placeholder for email
-            passwordHash: 'PHONE_AUTH', // Placeholder for password
-            requestedRole: UserRole.LABOUR,
-            labourSkills: skills,
-            labourExperience: experience,
-            isAvailable: true
+        // Find user by phone or email
+        const user = await User.findOne({
+            $or: [{ phone: identifier }, { email: identifier }]
         })
+        if (!user) {
+            return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 })
+        }
 
         const token = jwt.sign(
-            { userId: user._id, role: UserRole.LABOUR },
+            { userId: user._id, role: user.requestedRole || UserRole.LABOUR },
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '30d' }
         )
@@ -45,11 +35,15 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             token,
-            labourId: user._id
+            labour: {
+                id: user._id,
+                name: user.name,
+                role: user.requestedRole
+            }
         })
 
     } catch (error: any) {
-        console.error('Registration Error:', error)
+        console.error('Login Error:', error)
         return NextResponse.json({ success: false, message: error.message }, { status: 500 })
     }
 }
