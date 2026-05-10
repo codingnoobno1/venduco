@@ -6,7 +6,7 @@ export async function PUT(req: Request) {
     try {
         await dbConnect()
         const body = await req.json()
-        const { available, city, skills, labourId } = body
+        const { available, city, skills, labourId, urgentAvailability } = body
 
         if (!labourId) {
             return NextResponse.json({ success: false, message: 'LabourId is required' }, { status: 400 })
@@ -15,6 +15,7 @@ export async function PUT(req: Request) {
         const updateData: any = { isAvailable: available }
         if (city) updateData.city = city
         if (skills) updateData.labourSkills = skills
+        if (urgentAvailability) updateData.urgentAvailability = urgentAvailability
 
         const user = await User.findByIdAndUpdate(
             labourId,

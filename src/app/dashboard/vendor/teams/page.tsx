@@ -14,7 +14,8 @@ import {
     MoreVertical,
     ChevronDown,
     Plus,
-    User
+    User,
+    RefreshCcw
 } from 'lucide-react'
 
 export default function VendorTeamsPage() {
@@ -64,6 +65,28 @@ export default function VendorTeamsPage() {
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Rehire Section */}
+                <div className="lg:col-span-1 bg-white/[0.02] border border-white/5 rounded-2xl p-6">
+                    <h4 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-4">Quick Rehire</h4>
+                    <p className="text-sm text-gray-400 mb-6">Re-engage your top-performing teams from previous projects in one click.</p>
+                    <div className="space-y-4">
+                        {[
+                            { name: 'Tunnel Kings', supervisor: 'Amit Singh', lastActive: '2 months ago' },
+                            { name: 'Bridge Force', supervisor: 'Rajesh Patil', lastActive: '5 months ago' },
+                        ].map((prev, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                                <div>
+                                    <p className="font-bold text-sm">{prev.name}</p>
+                                    <p className="text-[10px] text-gray-500">{prev.supervisor}</p>
+                                </div>
+                                <button className="p-2 bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-lg transition-all">
+                                    <RefreshCcw size={16} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Right: Team Details / Member Management */}

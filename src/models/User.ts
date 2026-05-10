@@ -192,5 +192,6 @@ const UserSchema = new Schema<IUser>(
 // Indexes
 UserSchema.index({ registrationStatus: 1 })
 UserSchema.index({ requestedRole: 1 })
+UserSchema.index({ location: '2dsphere' })
 
 export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)

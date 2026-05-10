@@ -65,6 +65,8 @@ export { LabourJob, type ILabourJob } from './LabourJob'
 export { LabourApplication, type ILabourApplication } from './LabourApplication'
 export { LabourTeam, type ILabourTeam } from './LabourTeam'
 export { Attendance, type IAttendance } from './Attendance'
+export { Invitation, type IInvitation } from './Invitation'
+export { ContractorRequest, type IContractorRequest } from './ContractorRequest'
 
 // User Profiles
 export { UserProfile, type IUserProfile, type IExperience, type IAuthorization, type IProjectHistory } from './UserProfile'

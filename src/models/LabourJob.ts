@@ -9,6 +9,7 @@ export interface ILabourJob extends Document {
     salaryPerDay: number
     duration: string
     accommodation: boolean
+    foodIncluded: boolean
     joiningDate: Date
     status: 'OPEN' | 'CLOSED' | 'COMPLETED'
     createdAt: Date
@@ -25,6 +26,7 @@ const LabourJobSchema = new Schema<ILabourJob>(
         salaryPerDay: { type: Number, required: true },
         duration: { type: String, required: true },
         accommodation: { type: Boolean, default: false },
+        foodIncluded: { type: Boolean, default: false },
         joiningDate: { type: Date, required: true },
         status: {
             type: String,

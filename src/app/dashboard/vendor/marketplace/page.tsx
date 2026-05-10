@@ -172,12 +172,20 @@ export default function VendorMarketplacePage() {
                                 <div className="p-6 pt-10">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="text-xl font-bold">Apex Infra Solutions</h3>
-                                        <div className="flex items-center gap-1 text-yellow-500">
-                                            <Star size={16} fill="currentColor" />
-                                            <span className="text-white text-sm font-bold">4.8</span>
+                                        <div className="flex items-center gap-3">
+                                            <button className="text-gray-600 hover:text-red-500 transition-colors">
+                                                <Heart size={20} />
+                                            </button>
+                                            <div className="flex items-center gap-1 text-yellow-500">
+                                                <Star size={16} fill="currentColor" />
+                                                <span className="text-white text-sm font-bold">4.8</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p className="text-gray-500 text-sm mb-4">Specialized in heavy earthmoving and tunnel manpower.</p>
+                                    <p className="text-gray-500 text-sm mb-2">Specialized in heavy earthmoving and tunnel manpower.</p>
+                                    <div className="flex items-center gap-2 text-xs text-indigo-400 font-bold mb-4">
+                                        <Navigation size={12} /> 2.4 km away
+                                    </div>
                                     
                                     <div className="flex flex-wrap gap-2 mb-6">
                                         <span className="bg-white/5 text-gray-400 text-[10px] px-2 py-1 rounded-md">150+ WORKERS</span>

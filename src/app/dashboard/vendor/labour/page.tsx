@@ -15,7 +15,9 @@ import {
     ChevronRight,
     Home,
     Phone,
-    Calendar
+    Calendar,
+    Utensils,
+    Send
 } from 'lucide-react'
 
 export default function VendorLabourPage() {
@@ -140,6 +142,15 @@ function JobsList() {
                             </div>
                         </div>
 
+                        <div className="flex gap-2 mb-6">
+                            <span className="flex items-center gap-1.5 text-[10px] bg-white/5 px-2 py-1 rounded font-bold text-gray-400">
+                                <Home size={10} /> Accommodation
+                            </span>
+                            <span className="flex items-center gap-1.5 text-[10px] bg-white/5 px-2 py-1 rounded font-bold text-gray-400">
+                                <Utensils size={10} /> Food Included
+                            </span>
+                        </div>
+
                         <div className="flex items-center justify-between">
                             <div className="flex -space-x-2">
                                 {[1, 2, 3].map(j => (
@@ -198,7 +209,8 @@ function WorkforceList() {
                             </td>
                             <td className="px-6 py-4">
                                 <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-colors"><Phone size={18} /></button>
+                                    <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-colors" title="Call Worker"><Phone size={18} /></button>
+                                    <button className="p-2 hover:bg-blue-500/10 rounded-lg text-blue-400 transition-colors" title="Invite to Job"><Send size={18} /></button>
                                     <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-colors"><MoreVertical size={18} /></button>
                                 </div>
                             </td>
