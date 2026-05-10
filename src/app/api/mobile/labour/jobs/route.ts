@@ -36,3 +36,38 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: false, message: error.message }, { status: 500 })
     }
 }
+
+export async function POST(req: Request) {
+    try {
+        await dbConnect()
+        const body = await req.json()
+        const { title, location, city, skillsRequired, salaryPerDay, duration, accommodation, foodIncluded, joiningDate, vendorId } = body
+
+        if (!title || !location || !city || !skillsRequired || !salaryPerDay || !duration || !joiningDate || !vendorId) {
+            return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 })
+        }
+
+        const newJob = await LabourJob.create({
+            vendorId,
+            title,
+            location,
+            city,
+            skillsRequired,
+            salaryPerDay,
+            duration,
+            accommodation: accommodation || false,
+            foodIncluded: foodIncluded || false,
+            joiningDate: new Date(joiningDate),
+            status: 'OPEN'
+        })
+
+        return NextResponse.json({
+            success: true,
+            data: newJob
+        })
+
+    } catch (error: any) {
+        console.error('Create Job Error:', error)
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 })
+    }
+}
