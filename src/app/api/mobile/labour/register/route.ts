@@ -1,49 +1,50 @@
-import { NextResponse } from 'next/server'
-import { User, UserRole } from '@/models'
-import dbConnect from '@/lib/db'
-import jwt from 'jsonwebtoken'
+import { hashPassword, generateToken } from '../labour'
 
 export async function POST(req: Request) {
     try {
         await dbConnect()
         const body = await req.json()
-        const { identifier, otp } = body
+        const { name, email, password, phone, city, skills, experience } = body
 
-        if (!identifier || !otp) {
-            return NextResponse.json({ success: false, message: 'Identifier and OTP are required' }, { status: 400 })
+        if (!name || !email || !password) {
+            return NextResponse.json({ success: false, message: 'Name, Email and Password are required' }, { status: 400 })
         }
 
-        // Mock OTP verification
-        if (otp !== '123456') {
-            return NextResponse.json({ success: false, message: 'Invalid OTP' }, { status: 401 })
+        // Check if user already exists
+        let user = await User.findOne({ email })
+        if (user) {
+            return NextResponse.json({ success: false, message: 'User with this email already exists' }, { status: 400 })
         }
 
-        // Find user by phone or email
-        const user = await User.findOne({
-            $or: [{ phone: identifier }, { email: identifier }]
+        const hashedPassword = await hashPassword(password)
+
+        // Create new labour user
+        user = await User.create({
+            name,
+            email,
+            phone,
+            city,
+            passwordHash: hashedPassword,
+            requestedRole: UserRole.LABOUR,
+            labourSkills: skills,
+            labourExperience: experience,
+            isAvailable: true
         })
-        if (!user) {
-            return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 })
-        }
 
-        const token = jwt.sign(
-            { userId: user._id, role: user.requestedRole || UserRole.LABOUR },
-            process.env.JWT_SECRET || 'secret',
-            { expiresIn: '30d' }
-        )
+        const token = generateToken(user._id, UserRole.LABOUR)
 
         return NextResponse.json({
             success: true,
             token,
-            labour: {
+            user: {
                 id: user._id,
                 name: user.name,
-                role: user.requestedRole
+                email: user.email
             }
         })
 
     } catch (error: any) {
-        console.error('Login Error:', error)
+        console.error('Registration Error:', error)
         return NextResponse.json({ success: false, message: error.message }, { status: 500 })
     }
 }

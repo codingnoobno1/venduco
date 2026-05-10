@@ -1,41 +1,36 @@
-import { NextResponse } from 'next/server'
-import { User, UserRole } from '@/models'
-import dbConnect from '@/lib/db'
-import jwt from 'jsonwebtoken'
+import { comparePassword, generateToken } from '../labour'
 
 export async function POST(req: Request) {
     try {
         await dbConnect()
         const body = await req.json()
-        const { phone, otp } = body
+        const { email, password } = body
 
-        if (!phone || !otp) {
-            return NextResponse.json({ success: false, message: 'Phone and OTP are required' }, { status: 400 })
+        if (!email || !password) {
+            return NextResponse.json({ success: false, message: 'Email and Password are required' }, { status: 400 })
         }
 
-        // Mock OTP verification (In production, verify against a real OTP service/DB)
-        if (otp !== '123456') {
-            return NextResponse.json({ success: false, message: 'Invalid OTP' }, { status: 401 })
-        }
-
-        // Find user by phone
-        const user = await User.findOne({ phone })
+        // Find user by email
+        const user = await User.findOne({ email })
         if (!user) {
-            return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 })
+            return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 })
         }
 
-        const token = jwt.sign(
-            { userId: user._id, role: user.requestedRole || UserRole.LABOUR },
-            process.env.JWT_SECRET || 'secret',
-            { expiresIn: '30d' }
-        )
+        // Verify password
+        const isMatch = await comparePassword(password, user.passwordHash)
+        if (!isMatch) {
+            return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 })
+        }
+
+        const token = generateToken(user._id, user.requestedRole || UserRole.LABOUR)
 
         return NextResponse.json({
             success: true,
             token,
-            labour: {
+            user: {
                 id: user._id,
                 name: user.name,
+                email: user.email,
                 role: user.requestedRole
             }
         })
