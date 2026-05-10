@@ -53,7 +53,7 @@ export { VariationOrder, VOStatus, type IVariationOrder } from './VariationOrder
 
 // Intelligence & Strategy Governance
 export { SpecialisedWork, type ISpecialisedWork } from './SpecialisedWork'
-export { VendorExperienceProfile, ExperienceLevel, type IVendorExperienceProfile } from './VendorExperienceProfile'
+export { VendorExperienceProfile, type IVendorExperienceProfile } from './VendorExperienceProfile'
 export { CollaborationUnit, UnitType, type ICollaborationUnit } from './CollaborationUnit'
 export { ProjectStrategy, StrategyStatus, type IProjectStrategy } from './ProjectStrategy'
 export { ProjectOutcomeReview, type IProjectOutcomeReview } from './ProjectOutcomeReview'

@@ -245,4 +245,5 @@ const VendorExperienceProfileSchema: Schema = new Schema({
     lastUpdated: { type: Date, default: Date.now }
 });
 
-export default mongoose.model<IVendorExperienceProfile>('VendorExperienceProfile', VendorExperienceProfileSchema);
+export const VendorExperienceProfile = mongoose.models.VendorExperienceProfile ||
+    mongoose.model<IVendorExperienceProfile>('VendorExperienceProfile', VendorExperienceProfileSchema);
