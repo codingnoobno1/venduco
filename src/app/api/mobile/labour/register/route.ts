@@ -1,3 +1,6 @@
+import { NextResponse } from 'next/server'
+import { User, UserRole } from '@/models'
+import dbConnect from '@/lib/db'
 import { hashPassword, generateToken } from '../labour'
 
 export async function POST(req: Request) {
