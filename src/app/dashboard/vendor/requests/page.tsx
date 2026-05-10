@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/dashboard/shared/EmptyState'
 export default function VendorMaterialRequestsPage() {
     const [requests, setRequests] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [requestType, setRequestType] = useState<'material' | 'labour' | 'machine'>('material')
     const [selectedRequest, setSelectedRequest] = useState<any>(null)
     const [quoteForm, setQuoteForm] = useState({
         unitPrice: 0,
@@ -35,7 +36,9 @@ export default function VendorMaterialRequestsPage() {
     async function fetchRequests() {
         const token = localStorage.getItem('token')
         try {
-            const res = await fetch('/api/material-requests?view=vendor', {
+            const endpoint = requestType === 'material' ? '/api/material-requests?view=vendor' : 
+                           requestType === 'labour' ? '/api/mobile/labour/jobs' : '/api/machinerentals?view=vendor-requests'
+            const res = await fetch(endpoint, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             const data = await res.json()
@@ -94,6 +97,31 @@ export default function VendorMaterialRequestsPage() {
                 <button onClick={fetchRequests} className="p-2 border rounded-xl hover:bg-slate-100">
                     <RefreshCw size={18} />
                 </button>
+            </div>
+
+            {/* Type Selector */}
+            <div className="flex gap-4 border-b border-slate-200 dark:border-slate-700">
+                {[
+                    { id: 'material', label: 'Materials', icon: Package },
+                    { id: 'labour', label: 'Labour Hire', icon: Briefcase },
+                    { id: 'machine', label: 'Machine Rental', icon: Truck },
+                ].map(type => (
+                    <button
+                        key={type.id}
+                        onClick={() => setRequestType(type.id as any)}
+                        className={`pb-4 px-2 text-sm font-medium transition-all relative ${
+                            requestType === type.id ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <type.icon size={16} />
+                            {type.label}
+                        </div>
+                        {requestType === type.id && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+                        )}
+                    </button>
+                ))}
             </div>
 
             {/* Stats */}
