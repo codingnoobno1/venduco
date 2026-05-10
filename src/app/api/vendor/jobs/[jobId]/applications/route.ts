@@ -4,11 +4,11 @@ import dbConnect from '@/lib/db'
 
 export async function GET(
     req: Request,
-    { params }: { params: { jobId: string } }
+    { params }: { params: Promise<{ jobId: string }> }
 ) {
     try {
         await dbConnect()
-        const { jobId } = params
+        const { jobId } = await params
 
         const applications = await LabourApplication.find({ jobId })
             .populate('labourId', 'name phone city labourSkills labourExperience')
