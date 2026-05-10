@@ -29,9 +29,11 @@ export async function POST(req: Request) {
             city,
             passwordHash: hashedPassword,
             requestedRole: UserRole.LABOUR,
-            skills: skills,
-            experience: experience,
-            isAvailable: true
+            labourSkills: skills, // Map from 'skills'
+            labourExperience: experience, // Map from 'experience'
+            isAvailable: true,
+            registrationStep: 3,
+            registrationStatus: RegistrationStatus.ACTIVE
         })
 
         const token = generateToken(user._id, UserRole.LABOUR)

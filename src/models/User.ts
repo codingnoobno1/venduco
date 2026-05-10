@@ -69,7 +69,7 @@ export interface IUser extends Document {
 
     // Labour Details
     labourSkills?: string[]
-    labourExperience?: number
+    labourExperience?: string
     isAvailable?: boolean
     currentTeamId?: string
     urgentAvailability?: 'AVAILABLE_TODAY' | 'AVAILABLE_TOMORROW' | 'UNAVAILABLE'
@@ -161,7 +161,7 @@ const UserSchema = new Schema<IUser>(
 
         // Labour Details
         labourSkills: [{ type: String }],
-        labourExperience: { type: Number },
+        labourExperience: { type: String },
         isAvailable: { type: Boolean, default: true },
         currentTeamId: { type: String },
         urgentAvailability: { 
