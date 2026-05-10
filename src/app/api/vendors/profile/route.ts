@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
-import VendorExperienceProfile from '@/models/VendorExperienceProfile'
+import { VendorExperienceProfile } from '@/models/VendorExperienceProfile'
 import { verifyToken, unauthorizedResponse } from '@/lib/auth'
 
 // GET my vendor profile
