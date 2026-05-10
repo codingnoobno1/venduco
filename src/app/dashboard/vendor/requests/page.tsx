@@ -11,6 +11,8 @@ import {
     AlertTriangle,
     RefreshCw,
     Eye,
+    Briefcase,
+    Truck
 } from 'lucide-react'
 import { DataTable } from '@/components/dashboard/shared/DataTable'
 import { StatusBadge } from '@/components/dashboard/shared/StatusBadge'
