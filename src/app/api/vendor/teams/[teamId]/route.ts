@@ -4,11 +4,11 @@ import dbConnect from '@/lib/db'
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { teamId: string } }
+    { params }: { params: Promise<{ teamId: string }> }
 ) {
     try {
         await dbConnect()
-        const { teamId } = params
+        const { teamId } = await params
         const body = await req.json()
         const { action, data } = body // action: 'ASSIGN_SUPERVISOR' | 'ADD_WORKER' | 'REMOVE_WORKER' | 'UPDATE_INFO'
 
