@@ -4,11 +4,11 @@ import dbConnect from '@/lib/db'
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { applicationId: string } }
+    { params }: { params: Promise<{ applicationId: string }> }
 ) {
     try {
         await dbConnect()
-        const { applicationId } = params
+        const { applicationId } = await params
         const body = await req.json()
         const { status } = body
 
