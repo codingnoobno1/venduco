@@ -43,11 +43,19 @@ export default function VendorMarketplacePage() {
                 setJobs(jobsData.data || [])
             }
 
-            // Fetch Featured Vendors
-            const vendorsRes = await fetch('/api/vendors?limit=4', { headers })
-            const vendorsData = await vendorsRes.json()
-            if (vendorsData.success) {
-                setVendors(vendorsData.data || [])
+            // Fetch Workers based on active category
+            let workersUrl = '/api/vendor/workers?limit=10'
+            if (activeCategory === 'labour') {
+                workersUrl += '&skill=helper' // Example filter
+            } else if (activeCategory === 'machines') {
+                // Machines would typically be a different API, but for now we'll fetch workers
+                // or just keep the general list
+            }
+            
+            const workersRes = await fetch(workersUrl, { headers })
+            const workersData = await workersRes.json()
+            if (workersData.success) {
+                setVendors(workersData.data || [])
             }
         } catch (error) {
             console.error('Failed to fetch marketplace data:', error)
@@ -55,6 +63,10 @@ export default function VendorMarketplacePage() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        fetchData()
+    }, [activeCategory])
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
@@ -210,35 +222,35 @@ export default function VendorMarketplacePage() {
                                 <div key={vendor._id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/30 transition-all group shadow-sm hover:shadow-md">
                                     <div className="h-32 bg-slate-100 dark:bg-slate-800 relative">
                                         <div className="absolute -bottom-6 left-6 w-16 h-16 rounded-2xl bg-blue-600 border-4 border-white dark:border-slate-900 flex items-center justify-center text-xl font-black text-white shadow-lg">
-                                            {vendor.businessName?.substring(0, 2).toUpperCase() || vendor.name?.substring(0, 2).toUpperCase()}
+                                            {vendor.name?.substring(0, 2).toUpperCase()}
                                         </div>
                                         <div className="absolute top-4 right-4 bg-white/80 dark:bg-slate-950/40 backdrop-blur-md text-slate-900 dark:text-white text-[10px] px-3 py-1 rounded-full font-bold flex items-center gap-1 border border-slate-200 dark:border-white/10 shadow-sm">
-                                            <ShieldCheck size={12} className="text-blue-500" /> VERIFIED
+                                            <ShieldCheck size={12} className="text-blue-500" /> {vendor.urgentAvailability === 'AVAILABLE_TODAY' ? 'AVAILABLE' : 'VERIFIED'}
                                         </div>
                                     </div>
                                     <div className="p-6 pt-10">
                                         <div className="flex justify-between items-start mb-2">
-                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white truncate">{vendor.businessName || vendor.name}</h3>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white truncate">{vendor.name}</h3>
                                             <div className="flex items-center gap-3">
                                                 <button className="text-slate-300 hover:text-red-500 transition-colors">
                                                     <Heart size={20} />
                                                 </button>
                                                 <div className="flex items-center gap-1 text-yellow-500">
                                                     <Star size={16} fill="currentColor" />
-                                                    <span className="text-slate-900 dark:text-white text-sm font-bold">4.8</span>
+                                                    <span className="text-slate-900 dark:text-white text-sm font-bold">{vendor.trustScore ? (vendor.trustScore / 20).toFixed(1) : '4.8'}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <p className="text-slate-500 dark:text-slate-400 text-sm mb-2 line-clamp-2">
-                                            {vendor.serviceCategories?.join(', ') || 'General Construction Services'}
+                                            {vendor.labourSkills?.join(', ') || 'General Construction Services'}
                                         </p>
                                         <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-bold mb-4">
                                             <Navigation size={12} /> {vendor.city || 'Location N/A'}
                                         </div>
                                         
                                         <div className="flex flex-wrap gap-2 mb-6">
-                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">VERIFIED</span>
-                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">GST ACTIVE</span>
+                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md uppercase">{vendor.labourExperience || 'Experienced'}</span>
+                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-1 rounded-md">ID VERIFIED</span>
                                         </div>
 
                                         <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
