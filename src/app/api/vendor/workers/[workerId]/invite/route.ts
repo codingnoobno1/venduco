@@ -4,11 +4,11 @@ import dbConnect from '@/lib/db'
 
 export async function POST(
     req: Request,
-    { params }: { params: { workerId: string } }
+    { params }: { params: Promise<{ workerId: string }> }
 ) {
     try {
         await dbConnect()
-        const { workerId } = params
+        const { workerId } = await params
         const body = await req.json()
         const { vendorId, jobId, message } = body
 
