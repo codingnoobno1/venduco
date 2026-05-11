@@ -38,7 +38,7 @@ export default function VendorLabourPage() {
     }, [])
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
+        <div className="space-y-8">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
@@ -120,17 +120,6 @@ export default function VendorLabourPage() {
     )
 }
 
-            {/* Create Job Modal */}
-            {showCreateJob && (
-                <CreateJobModal 
-                    onClose={() => setShowCreateJob(false)} 
-                    vendorId={vendorId}
-                />
-            )}
-        </div>
-    )
-}
-
 function CreateJobModal({ onClose, vendorId }: { onClose: () => void, vendorId: string }) {
     const [formData, setFormData] = useState({
         title: '',
@@ -172,8 +161,8 @@ function CreateJobModal({ onClose, vendorId }: { onClose: () => void, vendorId: 
     }
 
     return (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Job Opening</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">✕</button>
