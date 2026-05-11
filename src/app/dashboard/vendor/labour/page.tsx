@@ -23,6 +23,7 @@ import {
 export default function VendorLabourPage() {
     const [activeTab, setActiveTab] = useState<'jobs' | 'workers' | 'teams' | 'attendance'>('jobs')
     const [showCreateJob, setShowCreateJob] = useState(false)
+    const [vendorId, setVendorId] = useState('')
     const [stats, setStats] = useState({
         totalWorkers: 0,
         activeTeams: 0,
