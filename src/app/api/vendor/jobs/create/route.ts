@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     try {
         await dbConnect()
         const body = await req.json()
-        const { title, location, city, skillsRequired, salaryPerDay, duration, accommodation, joiningDate, vendorId } = body
+        const { title, location, city, skillsRequired, salaryPerDay, duration, accommodation, joiningDate, vendorId, openings } = body
 
         if (!title || !location || !city || !vendorId) {
             return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 })
@@ -22,6 +22,7 @@ export async function POST(req: Request) {
             duration,
             accommodation,
             joiningDate: new Date(joiningDate),
+            openings: Number(openings) || 1,
             status: 'OPEN'
         })
 

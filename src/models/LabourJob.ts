@@ -11,6 +11,7 @@ export interface ILabourJob extends Document {
     accommodation: boolean
     foodIncluded: boolean
     joiningDate: Date
+    openings: number
     status: 'OPEN' | 'CLOSED' | 'COMPLETED'
     createdAt: Date
     updatedAt: Date
@@ -28,6 +29,7 @@ const LabourJobSchema = new Schema<ILabourJob>(
         accommodation: { type: Boolean, default: false },
         foodIncluded: { type: Boolean, default: false },
         joiningDate: { type: Date, required: true },
+        openings: { type: Number, default: 1 },
         status: {
             type: String,
             enum: ['OPEN', 'CLOSED', 'COMPLETED'],

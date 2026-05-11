@@ -6,10 +6,10 @@ export async function POST(req: Request) {
     try {
         await dbConnect()
         const body = await req.json()
-        const { jobId, labourId } = body
+        const { jobId, labourId, bidAmount, message } = body
 
-        if (!jobId || !labourId) {
-            return NextResponse.json({ success: false, message: 'JobId and LabourId are required' }, { status: 400 })
+        if (!jobId || !labourId || !bidAmount) {
+            return NextResponse.json({ success: false, message: 'JobId, LabourId and BidAmount are required' }, { status: 400 })
         }
 
         // Check if already applied
@@ -21,6 +21,8 @@ export async function POST(req: Request) {
         await LabourApplication.create({
             jobId,
             labourId,
+            bidAmount,
+            message,
             status: 'PENDING'
         })
 

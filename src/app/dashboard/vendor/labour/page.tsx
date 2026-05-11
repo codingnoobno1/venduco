@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 
 export default function VendorLabourPage() {
-    const [activeTab, setActiveTab] = useState<'jobs' | 'workers' | 'teams' | 'attendance'>('jobs')
+    const [activeTab, setActiveTab] = useState<'jobs' | 'workers' | 'teams' | 'attendance' | 'applications'>('jobs')
     const [showCreateJob, setShowCreateJob] = useState(false)
     const [vendorId, setVendorId] = useState('')
     const [stats, setStats] = useState({
@@ -102,6 +102,7 @@ export default function VendorLabourPage() {
             <div className="flex border-b border-slate-200 dark:border-slate-800 mb-8 overflow-x-auto no-scrollbar">
                 {[
                     { id: 'jobs', label: 'Job Openings' },
+                    { id: 'applications', label: 'Applications' },
                     { id: 'workers', label: 'My Workforce' },
                     { id: 'teams', label: 'Managed Teams' },
                     { id: 'attendance', label: 'Attendance' },
@@ -124,6 +125,7 @@ export default function VendorLabourPage() {
             {/* Main Content Area */}
             <div className="grid grid-cols-1 gap-6">
                 {activeTab === 'jobs' && <JobsList vendorId={vendorId} key={showCreateJob ? 'refreshing' : 'stable'} />}
+                {activeTab === 'applications' && <ApplicationsList vendorId={vendorId} />}
                 {activeTab === 'workers' && <WorkforceList />}
                 {activeTab === 'teams' && <TeamsList vendorId={vendorId} />}
                 {activeTab === 'attendance' && <AttendanceView />}
@@ -149,6 +151,7 @@ function CreateJobModal({ onClose, vendorId }: { onClose: () => void, vendorId: 
         salaryPerDay: '',
         duration: '',
         joiningDate: '',
+        openings: '1',
         accommodation: false,
     })
     const [loading, setLoading] = useState(false)
@@ -238,6 +241,17 @@ function CreateJobModal({ onClose, vendorId }: { onClose: () => void, vendorId: 
                                 placeholder="800"
                                 value={formData.salaryPerDay}
                                 onChange={e => setFormData({...formData, salaryPerDay: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Number of Openings</label>
+                            <input 
+                                required
+                                type="number"
+                                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500/50 transition-all text-slate-900 dark:text-white"
+                                placeholder="e.g. 5"
+                                value={formData.openings}
+                                onChange={e => setFormData({...formData, openings: e.target.value})}
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -557,10 +571,117 @@ function AttendanceView() {
                         <button className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">View Geo-Tag</button>
                     </div>
                 ))}
-                <div className="py-12 text-center text-slate-400">
                     <p className="text-sm italic">Attendance logs are synced from the mobile worker application.</p>
-                </div>
             </div>
+        </div>
+    )
+}
+
+function ApplicationsList({ vendorId }: { vendorId: string }) {
+    const [applications, setApplications] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (vendorId) fetchApplications()
+    }, [vendorId])
+
+    async function fetchApplications() {
+        try {
+            const res = await fetch(`/api/vendor/jobs/applications?vendorId=${vendorId}`)
+            const data = await res.json()
+            if (data.success) setApplications(data.data)
+        } catch (err) {
+            console.error('Failed to fetch applications:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    async function handleAction(applicationId: string, status: string) {
+        try {
+            const res = await fetch(`/api/vendor/jobs/applications/${applicationId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            })
+            if (res.ok) fetchApplications()
+        } catch (err) {
+            console.error('Failed to update application:', err)
+        }
+    }
+
+    if (loading) return <div className="text-slate-500 py-12 text-center">Loading applications...</div>
+
+    return (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+            <table className="w-full text-left">
+                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th className="px-6 py-4 font-bold">Applicant</th>
+                        <th className="px-6 py-4 font-bold">Job Title</th>
+                        <th className="px-6 py-4 font-bold">Base Wage</th>
+                        <th className="px-6 py-4 font-bold">Bid Amount</th>
+                        <th className="px-6 py-4 font-bold">Status</th>
+                        <th className="px-6 py-4 font-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {applications.map(app => (
+                        <tr key={app._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center font-bold text-blue-600">
+                                        {app.labourId?.name?.substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 dark:text-white text-sm">{app.labourId?.name}</p>
+                                        <p className="text-[10px] text-slate-500">{app.labourId?.phone}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{app.jobId?.title}</td>
+                            <td className="px-6 py-4 text-sm font-medium">₹{app.jobId?.salaryPerDay}</td>
+                            <td className="px-6 py-4">
+                                <span className={`text-sm font-bold ${app.bidAmount > app.jobId?.salaryPerDay ? 'text-orange-600' : 'text-green-600'}`}>
+                                    ₹{app.bidAmount}
+                                </span>
+                            </td>
+                            <td className="px-6 py-4">
+                                <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${
+                                    app.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                    app.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                    'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                    {app.status}
+                                </span>
+                            </td>
+                            <td className="px-6 py-4">
+                                {app.status === 'PENDING' && (
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => handleAction(app._id, 'APPROVED')}
+                                            className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-lg transition-all"
+                                        >
+                                            Hire
+                                        </button>
+                                        <button 
+                                            onClick={() => handleAction(app._id, 'REJECTED')}
+                                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-lg transition-all"
+                                        >
+                                            Reject
+                                        </button>
+                                    </div>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                    {applications.length === 0 && (
+                        <tr>
+                            <td colSpan={6} className="px-6 py-12 text-center text-slate-500 italic">No applications received yet.</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
         </div>
     )
 }
