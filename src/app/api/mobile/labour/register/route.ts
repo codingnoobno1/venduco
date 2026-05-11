@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { User, UserRole } from '@/models'
+import { User, UserRole, RegistrationStatus } from '@/models'
 import dbConnect from '@/lib/db'
 import { hashPassword, generateToken } from '../labor'
 
@@ -44,7 +44,11 @@ export async function POST(req: Request) {
             user: {
                 id: user._id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                phone: user.phone,
+                city: user.city,
+                skills: user.labourSkills,
+                experience: user.labourExperience
             }
         })
 
