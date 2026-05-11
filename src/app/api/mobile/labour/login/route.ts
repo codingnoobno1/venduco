@@ -34,7 +34,12 @@ export async function POST(req: Request) {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.requestedRole
+                role: user.requestedRole,
+                phone: user.phone,
+                city: user.city,
+                skills: user.labourSkills || [],
+                experience: user.labourExperience || '',
+                isAvailable: user.isAvailable
             }
         })
 
