@@ -12,28 +12,12 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: false, message: 'VendorId is required' }, { status: 400 })
         }
 
-        // Mocking some analytics data for now, but connecting to real models
+        // Real analytics data
         const totalWorkers = await User.countDocuments({ requestedRole: UserRole.LABOUR })
-        const activeTeams = await LabourTeam.countDocuments()
+        const activeTeams = await LabourTeam.countDocuments({ vendorId })
         const openJobs = await LabourJob.countDocuments({ vendorId, status: 'OPEN' })
+        const idleWorkers = await User.countDocuments({ requestedRole: UserRole.LABOUR, isAvailable: true })
         
-        // Workforce utilization (mock logic)
-        const utilization = [
-            { name: 'Jan', active: 45, idle: 15 },
-            { name: 'Feb', active: 52, idle: 12 },
-            { name: 'Mar', active: 68, idle: 8 },
-            { name: 'Apr', active: 75, idle: 5 },
-            { name: 'May', active: 82, idle: 4 },
-        ]
-
-        // Skill distribution
-        const skillDistribution = [
-            { skill: 'Helper', count: 65 },
-            { skill: 'Welder', count: 24 },
-            { skill: 'Electrician', count: 18 },
-            { skill: 'Operator', count: 12 },
-        ]
-
         return NextResponse.json({
             success: true,
             data: {
@@ -41,7 +25,7 @@ export async function GET(req: Request) {
                     totalWorkers,
                     activeTeams,
                     openJobs,
-                    idleWorkers: 14 // Mock
+                    idleWorkers
                 },
                 utilization,
                 skillDistribution

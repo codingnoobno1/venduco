@@ -23,19 +23,38 @@ import {
 export default function VendorLabourPage() {
     const [activeTab, setActiveTab] = useState<'jobs' | 'workers' | 'teams' | 'attendance'>('jobs')
     const [showCreateJob, setShowCreateJob] = useState(false)
-    const [vendorId, setVendorId] = useState('')
+    const [stats, setStats] = useState({
+        totalWorkers: 0,
+        activeTeams: 0,
+        openJobs: 0,
+        idleWorkers: 0
+    })
 
     useEffect(() => {
         const token = localStorage.getItem('token')
         if (token) {
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]))
-                setVendorId(payload.userId)
+                const vid = payload.userId
+                setVendorId(vid)
+                fetchStats(vid)
             } catch (e) {
                 console.error('Failed to parse token:', e)
             }
         }
     }, [])
+
+    async function fetchStats(vid: string) {
+        try {
+            const res = await fetch(`/api/vendor/analytics/workforce?vendorId=${vid}`)
+            const data = await res.json()
+            if (data.success) {
+                setStats(data.data.summary)
+            }
+        } catch (error) {
+            console.error('Failed to fetch stats:', error)
+        }
+    }
 
     return (
         <div className="space-y-8">
@@ -59,10 +78,10 @@ export default function VendorLabourPage() {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {[
-                    { label: 'Total Workers', value: '142', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                    { label: 'Active Teams', value: '12', icon: BadgeCheck, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20' },
-                    { label: 'Open Jobs', value: '8', icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-                    { label: 'Idle Workers', value: '14', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+                    { label: 'Total Workers', value: stats.totalWorkers, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                    { label: 'Active Teams', value: stats.activeTeams, icon: BadgeCheck, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20' },
+                    { label: 'Open Jobs', value: stats.openJobs, icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+                    { label: 'Idle Workers', value: stats.idleWorkers, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20' },
                 ].map((stat, idx) => (
                     <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
                         <div className="flex justify-between items-start">
