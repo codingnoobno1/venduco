@@ -5,18 +5,19 @@ import FeatureFlag from '@/models/FeatureFlag';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { key: string } }
+  { params }: { params: Promise<{ key: string }> }
 ) {
   const user = verifyToken(req);
   if (!user || user.role !== 'ADMIN') {
     return NextResponse.json({ success: false, error: 'UNAUTHORIZED' }, { status: 401 });
   }
 
+  const { key } = await params;
   const body = await req.json();
   await dbConnect();
 
   const flag = await FeatureFlag.findOneAndUpdate(
-    { key: params.key },
+    { key },
     { $set: body },
     { new: true, runValidators: true }
   );

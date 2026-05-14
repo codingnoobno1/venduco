@@ -5,7 +5,7 @@ import EscrowTransaction from '@/models/EscrowTransaction';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { escrowId: string } }
+  { params }: { params: Promise<{ escrowId: string }> }
 ) {
   const user = verifyToken(req);
   if (!user) {
