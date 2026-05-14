@@ -10,6 +10,11 @@ import { BiddingSystemShowcase } from "@/components/animated/bidding-system"
 import { StakeholderSection } from "@/components/sections/stakeholder-section"
 import { Navbar } from "@/components/portfolio/navbar"
 import { Footer } from "@/components/portfolio/footer"
+import { HowItWorks } from "@/components/sections/how-it-works"
+import { TrustSection } from "@/components/sections/trust-section"
+import { PricingSection } from "@/components/sections/pricing-section"
+import { TestimonialsSection } from "@/components/sections/testimonials-section"
+import { FaqSection } from "@/components/sections/faq-section"
 
 export default function ModernLandingPage() {
   return (
@@ -26,10 +31,16 @@ export default function ModernLandingPage() {
       {/* Stakeholder Logos - DFCCIL, RVNL, L&T, NHAI, Tata */}
       <StakeholderSection />
 
+      {/* Trust & Features Bento Grid - NEW */}
+      <TrustSection />
+
       {/* Infinite Project Carousel */}
       <section className="py-16">
         <InfiniteProjectCarousel />
       </section>
+
+      {/* How it Works - NEW */}
+      <HowItWorks />
 
       {/* Animated Statistics */}
       <section className="container mx-auto px-4 py-16">
@@ -39,18 +50,28 @@ export default function ModernLandingPage() {
         <AnimatedStats />
       </section>
 
+      {/* Testimonials - NEW */}
+      <TestimonialsSection />
+
       {/* Tender Growth Graph */}
       <section className="container mx-auto px-4 py-16">
         <TenderGraph />
       </section>
+
+      {/* Pricing - NEW */}
+      <PricingSection />
 
       {/* Bidding System */}
       <section className="container mx-auto px-4 py-16">
         <BiddingSystemShowcase />
       </section>
 
+      {/* FAQ - NEW */}
+      <FaqSection />
+
       {/* Footer */}
       <Footer />
     </div>
   )
 }
+

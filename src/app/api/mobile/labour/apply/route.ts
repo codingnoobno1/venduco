@@ -1,38 +1,41 @@
-import { NextResponse } from 'next/server'
-import { LabourApplication } from '@/models'
-import dbConnect from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth';
+import { LabourApplication } from '@/models';
+import dbConnect from '@/lib/db';
 
-export async function POST(req: Request) {
-    try {
-        await dbConnect()
-        const body = await req.json()
-        const { jobId, labourId, bidAmount, message } = body
+export async function POST(req: NextRequest) {
+  const user = verifyToken(req);
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'UNAUTHORIZED' }, { status: 401 });
+  }
 
-        if (!jobId || !labourId || !bidAmount) {
-            return NextResponse.json({ success: false, message: 'JobId, LabourId and BidAmount are required' }, { status: 400 })
-        }
+  const body = await req.json();
+  const { jobId, bidAmount, message } = body;
 
-        // Check if already applied
-        const existing = await LabourApplication.findOne({ jobId, labourId })
-        if (existing) {
-            return NextResponse.json({ success: false, message: 'Already applied for this job' }, { status: 400 })
-        }
+  if (!jobId || !bidAmount) {
+    return NextResponse.json(
+      { success: false, error: 'jobId and bidAmount are required' },
+      { status: 400 }
+    );
+  }
 
-        await LabourApplication.create({
-            jobId,
-            labourId,
-            bidAmount,
-            message,
-            status: 'PENDING'
-        })
+  await dbConnect();
 
-        return NextResponse.json({
-            success: true,
-            message: 'Application submitted successfully'
-        })
+  const existing = await LabourApplication.findOne({ jobId, labourId: user.userId });
+  if (existing) {
+    return NextResponse.json(
+      { success: false, error: 'Already applied for this job' },
+      { status: 409 }
+    );
+  }
 
-    } catch (error: any) {
-        console.error('Apply Error:', error)
-        return NextResponse.json({ success: false, message: error.message }, { status: 500 })
-    }
+  const application = await LabourApplication.create({
+    jobId,
+    labourId: user.userId,
+    bidAmount,
+    message,
+    status: 'PENDING',
+  });
+
+  return NextResponse.json({ success: true, data: { applicationId: application._id } }, { status: 201 });
 }
