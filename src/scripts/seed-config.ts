@@ -16,7 +16,7 @@ async function main() {
 
   const config = await PlatformConfig.create({
     isActive: true,
-    stage: 0,
+    stage: 'STAGE_0_PREMARKET',
     commissionEnabled: false,
     commissionRate: 0,
     commissionMode: 'PERCENTAGE',
@@ -24,19 +24,16 @@ async function main() {
     perDayFee: 0,
     perHireFee: 0,
     subscriptionEnabled: false,
-    trialDays: 0,
-    tiers: {
-      FREE: { monthlyPrice: 0, yearlyPrice: 0, commissionDiscount: 0, maxJobs: 3, maxHires: 5, maxTeams: 1, features: [] },
-      STARTER: { monthlyPrice: 499, yearlyPrice: 4999, commissionDiscount: 0.5, maxJobs: 20, maxHires: 50, maxTeams: 3, features: ['priority_support'] },
-      PRO: { monthlyPrice: 1499, yearlyPrice: 14999, commissionDiscount: 1, maxJobs: 100, maxHires: 200, maxTeams: 10, features: ['priority_support', 'analytics', 'bulk_hire'] },
-      ENTERPRISE: { monthlyPrice: 4999, yearlyPrice: 49999, commissionDiscount: 2, maxJobs: -1, maxHires: -1, maxTeams: -1, features: ['priority_support', 'analytics', 'bulk_hire', 'dedicated_account_manager', 'custom_contracts'] },
-    },
+    trialDays: 14,
     freeTierLimits: { maxJobs: 3, maxHires: 5, maxTeams: 1 },
-    premiumFeatures: [],
     paymentGateway: 'DUMMY',
-    paymentMode: 'DISABLED',
-    pricingLockGracePeriodDays: 60,
-    newPriceNotificationDays: 14,
+    paymentMode: 'TEST',
+    escrowEnabled: false,
+    pricingPageVisible: false,
+    upgradePromptsEnabled: false,
+    messaging: 'Founding Partner — Free Access',
+    pricingLockGracePeriodDays: 365,
+    newPriceNotificationDays: 60,
   });
 
   console.log('Stage 0 config seeded:', config._id);
