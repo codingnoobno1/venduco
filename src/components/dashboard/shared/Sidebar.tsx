@@ -36,6 +36,7 @@ interface SidebarProps {
 const roleMenus: Record<string, any[]> = {
     ADMIN: [
         { name: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
+        { name: 'Revenue Control', href: '/dashboard/admin/revenue', icon: Sparkles },
         { name: 'Users', href: '/dashboard/admin/users', icon: Users },
         { name: 'All Projects', href: '/dashboard/admin/projects', icon: FolderKanban },
         { name: 'Machines', href: '/dashboard/admin/machines', icon: Truck },
