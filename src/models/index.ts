@@ -77,3 +77,11 @@ export { CostTracking, CostSource, type ICostTracking } from './CostTracking'
 export { CashFlowForecast, type ICashFlowForecast, type IMonthlyForecast } from './CashFlowForecast'
 export { CostAlert, AlertSeverity, AlertType, type ICostAlert } from './CostAlert'
 
+// Revenue & Monetisation Engine
+export { default as PlatformConfig, type IPlatformConfig } from './PlatformConfig'
+export { default as VendorPricingOverride, type IVendorPricingOverride } from './VendorPricingOverride'
+export { default as FeatureFlag, type IFeatureFlag } from './FeatureFlag'
+export { default as RevenueEvent, type IRevenueEvent } from './RevenueEvent'
+export { default as WorkerWallet, type IWorkerWallet } from './WorkerWallet'
+export { default as EscrowTransaction, type IEscrowTransaction, type WorkerSplit, type EscrowStatus } from './EscrowTransaction'
+
