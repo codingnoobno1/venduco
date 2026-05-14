@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { resolveVendorLimits } from '@/lib/pricing';
 import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import { User } from '@/models/User';
 
 export async function GET(req: NextRequest) {
   const user = verifyToken(req);

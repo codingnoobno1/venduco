@@ -6,16 +6,17 @@ import { LabourJob } from '@/models/LabourJob';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = verifyToken(req);
   if (!user) {
     return NextResponse.json({ success: false, error: 'UNAUTHORIZED' }, { status: 401 });
   }
 
+  const { id } = await params;
   await dbConnect();
 
-  const record = await Attendance.findById(params.id).populate('jobId');
+  const record = await Attendance.findById(id).populate('jobId');
   if (!record) {
     return NextResponse.json({ success: false, error: 'Attendance record not found' }, { status: 404 });
   }
