@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
       $set: {
         commissionEnabled: false,
         subscriptionEnabled: false,
-        paymentMode: 'DISABLED',
+        paymentMode: 'TEST',
+        escrowEnabled: false,
       },
     }
   );

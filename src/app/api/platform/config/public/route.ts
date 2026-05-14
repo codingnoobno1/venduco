@@ -6,14 +6,16 @@ import { getActiveConfig } from '@/lib/pricing';
 export async function GET() {
   const config = await getActiveConfig();
 
+  const cfg = config as any;
   return NextResponse.json({
     success: true,
     data: {
-      stage: (config as any).stage ?? 0,
+      stage: cfg.stage ?? 'STAGE_0_PREMARKET',
       commissionEnabled: config.commissionEnabled,
       subscriptionEnabled: config.subscriptionEnabled,
       paymentGateway: config.paymentGateway,
-      paymentMode: (config as any).paymentMode ?? 'DISABLED',
+      paymentMode: cfg.paymentMode ?? 'TEST',
+      escrowEnabled: cfg.escrowEnabled ?? false,
       trialDays: config.trialDays,
     },
   });
