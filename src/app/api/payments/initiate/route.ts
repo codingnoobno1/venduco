@@ -4,7 +4,7 @@ import { calculateAndLog } from '@/lib/pricing';
 import { getGateway } from '@/lib/payment-gateway';
 import dbConnect from '@/lib/db';
 import EscrowTransaction from '@/models/EscrowTransaction';
-import Invoice from '@/models/Invoice';
+import { Invoice } from '@/models/Invoice';
 import { randomUUID } from 'crypto';
 
 export async function POST(req: NextRequest) {

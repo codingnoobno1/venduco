@@ -4,19 +4,21 @@ import { getGateway } from '@/lib/payment-gateway';
 import dbConnect from '@/lib/db';
 import EscrowTransaction from '@/models/EscrowTransaction';
 import WorkerWallet from '@/models/WorkerWallet';
+import type { WorkerSplit } from '@/models/EscrowTransaction';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { escrowId: string } }
+  { params }: { params: Promise<{ escrowId: string }> }
 ) {
   const user = verifyToken(req);
   if (!user) {
     return NextResponse.json({ success: false, error: 'UNAUTHORIZED' }, { status: 401 });
   }
 
+  const { escrowId } = await params;
   await dbConnect();
 
-  const escrow = await EscrowTransaction.findById(params.escrowId);
+  const escrow = await EscrowTransaction.findById(escrowId);
   if (!escrow) {
     return NextResponse.json({ success: false, error: 'Escrow not found' }, { status: 404 });
   }
@@ -39,9 +41,9 @@ export async function POST(
   await escrow.save();
 
   const gateway = await getGateway();
-  const results = [];
+  const results: { labourId: unknown; status: string }[] = [];
 
-  for (const split of escrow.workerSplits) {
+  for (const split of escrow.workerSplits as WorkerSplit[]) {
     try {
       const payout = await gateway.initiatePayout({
         payoutId: String(split.labourId),
@@ -73,7 +75,7 @@ export async function POST(
     }
   }
 
-  const allPaid = escrow.workerSplits.every(s => s.status === 'PAID');
+  const allPaid = (escrow.workerSplits as WorkerSplit[]).every(s => s.status === 'PAID');
   escrow.status = allPaid ? 'DISBURSED' : 'RELEASED';
   escrow.releasedAt = new Date();
   if (allPaid) escrow.disbursedAt = new Date();
