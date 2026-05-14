@@ -12,6 +12,7 @@ export async function POST(
     return NextResponse.json({ success: false, error: 'UNAUTHORIZED' }, { status: 401 });
   }
 
+  const { escrowId } = await params;
   const { reason } = await req.json();
   if (!reason) {
     return NextResponse.json({ success: false, error: 'reason required' }, { status: 400 });
@@ -19,7 +20,7 @@ export async function POST(
 
   await dbConnect();
 
-  const escrow = await EscrowTransaction.findById(params.escrowId);
+  const escrow = await EscrowTransaction.findById(escrowId);
   if (!escrow) {
     return NextResponse.json({ success: false, error: 'Escrow not found' }, { status: 404 });
   }
