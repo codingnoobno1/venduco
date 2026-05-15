@@ -3,7 +3,7 @@ import React from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-interface ShinyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ShinyButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'> {
   children: React.ReactNode
   className?: string
 }
