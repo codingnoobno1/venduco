@@ -15,6 +15,7 @@ export async function GET(req: Request) {
         // 1. Get all jobs by this vendor
         const vendorJobs = await LabourJob.find({ vendorId })
         const jobIds = vendorJobs.map(job => job._id)
+        console.log(`DEBUG: Vendor ${vendorId} has job IDs: ${jobIds.join(', ')}`)
 
         // 2. Get all applications for these jobs
         const applications = await LabourApplication.find({ jobId: { $in: jobIds } })
@@ -26,7 +27,9 @@ export async function GET(req: Request) {
                 path: 'jobId',
                 select: 'title location salaryPerDay openings status'
             })
-            .sort({ appliedAt: -1 })
+            .sort({ createdAt: -1 })
+
+        console.log(`DEBUG: Found ${applications.length} applications for vendor ${vendorId}`)
 
         return NextResponse.json({
             success: true,
