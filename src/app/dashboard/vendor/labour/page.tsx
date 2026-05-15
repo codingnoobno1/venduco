@@ -24,6 +24,7 @@ export default function VendorLabourPage() {
     const [activeTab, setActiveTab] = useState<'jobs' | 'workers' | 'teams' | 'attendance' | 'applications'>('jobs')
     const [showCreateJob, setShowCreateJob] = useState(false)
     const [vendorId, setVendorId] = useState('')
+    const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
     const [stats, setStats] = useState({
         totalWorkers: 0,
         activeTeams: 0,
@@ -109,7 +110,10 @@ export default function VendorLabourPage() {
                 ].map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
+                        onClick={() => {
+                            setActiveTab(tab.id as any)
+                            if (tab.id !== 'applications') setSelectedJobId(null)
+                        }}
                         className={`px-6 py-4 text-sm font-bold transition-all relative ${
                             activeTab === tab.id ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                         }`}
@@ -124,8 +128,23 @@ export default function VendorLabourPage() {
 
             {/* Main Content Area */}
             <div className="grid grid-cols-1 gap-6">
-                {activeTab === 'jobs' && <JobsList vendorId={vendorId} key={showCreateJob ? 'refreshing' : 'stable'} />}
-                {activeTab === 'applications' && <ApplicationsList vendorId={vendorId} />}
+                {activeTab === 'jobs' && (
+                    <JobsList 
+                        vendorId={vendorId} 
+                        onViewDetails={(id) => {
+                            setSelectedJobId(id)
+                            setActiveTab('applications')
+                        }}
+                        key={showCreateJob ? 'refreshing' : 'stable'} 
+                    />
+                )}
+                {activeTab === 'applications' && (
+                    <ApplicationsList 
+                        vendorId={vendorId} 
+                        selectedJobId={selectedJobId}
+                        onClearFilter={() => setSelectedJobId(null)}
+                    />
+                )}
                 {activeTab === 'workers' && <WorkforceList />}
                 {activeTab === 'teams' && <TeamsList vendorId={vendorId} />}
                 {activeTab === 'attendance' && <AttendanceView />}
@@ -300,7 +319,7 @@ function CreateJobModal({ onClose, vendorId }: { onClose: () => void, vendorId: 
     )
 }
 
-function JobsList({ vendorId }: { vendorId: string }) {
+function JobsList({ vendorId, onViewDetails }: { vendorId: string, onViewDetails: (id: string) => void }) {
     const [jobs, setJobs] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -376,7 +395,10 @@ function JobsList({ vendorId }: { vendorId: string }) {
                         </div>
 
                         <div className="flex items-center justify-end">
-                            <button className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline">
+                            <button 
+                                onClick={() => onViewDetails(job._id)}
+                                className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline"
+                            >
                                 View Details <ChevronRight size={16} />
                             </button>
                         </div>
@@ -577,7 +599,7 @@ function AttendanceView() {
     )
 }
 
-function ApplicationsList({ vendorId }: { vendorId: string }) {
+function ApplicationsList({ vendorId, selectedJobId, onClearFilter }: { vendorId: string, selectedJobId?: string | null, onClearFilter: () => void }) {
     const [applications, setApplications] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -612,8 +634,26 @@ function ApplicationsList({ vendorId }: { vendorId: string }) {
 
     if (loading) return <div className="text-slate-500 py-12 text-center">Loading applications...</div>
 
+    const filteredApplications = selectedJobId 
+        ? applications.filter(app => app.jobId?._id === selectedJobId)
+        : applications
+
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        <div className="space-y-4">
+            {selectedJobId && (
+                <div className="flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
+                        Showing applications for: <span className="font-bold">{filteredApplications[0]?.jobId?.title || 'Selected Job'}</span>
+                    </p>
+                    <button 
+                        onClick={onClearFilter}
+                        className="text-xs font-bold text-blue-600 hover:underline"
+                    >
+                        Show All Applications
+                    </button>
+                </div>
+            )}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
             <table className="w-full text-left">
                 <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
                     <tr>
@@ -626,16 +666,16 @@ function ApplicationsList({ vendorId }: { vendorId: string }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {applications.map(app => (
+                    {filteredApplications.map(app => (
                         <tr key={app._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                             <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center font-bold text-blue-600">
-                                        {app.labourId?.name?.substring(0, 2).toUpperCase()}
+                                        {app.labourId?.name?.substring(0, 2).toUpperCase() || '??'}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900 dark:text-white text-sm">{app.labourId?.name}</p>
-                                        <p className="text-[10px] text-slate-500">{app.labourId?.phone}</p>
+                                        <p className="font-bold text-slate-900 dark:text-white text-sm">{app.labourId?.name || 'Unknown'}</p>
+                                        <p className="text-[10px] text-slate-500">{app.labourId?.phone || 'No Phone'}</p>
                                     </div>
                                 </div>
                             </td>
@@ -675,9 +715,9 @@ function ApplicationsList({ vendorId }: { vendorId: string }) {
                             </td>
                         </tr>
                     ))}
-                    {applications.length === 0 && (
+                    {filteredApplications.length === 0 && (
                         <tr>
-                            <td colSpan={6} className="px-6 py-12 text-center text-slate-500 italic">No applications received yet.</td>
+                            <td colSpan={6} className="px-6 py-12 text-center text-slate-500 italic">No applications found.</td>
                         </tr>
                     )}
                 </tbody>
