@@ -722,6 +722,7 @@ function ApplicationsList({ vendorId, selectedJobId, onClearFilter }: { vendorId
                     )}
                 </tbody>
             </table>
+            </div>
         </div>
     )
 }
