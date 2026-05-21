@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+export const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
 
 export const generateToken = (userId: string, role: string) => {
     return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '30d' })

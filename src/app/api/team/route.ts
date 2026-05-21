@@ -11,7 +11,7 @@ function verifyToken(req: NextRequest) {
 
     try {
         const token = authHeader.split(' ')[1]
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this-in-production') as any
         return decoded
     } catch {
         return null
