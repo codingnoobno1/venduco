@@ -27,7 +27,8 @@ export async function GET(req: Request) {
                 skills: user.labourSkills,
                 experience: user.labourExperience,
                 isAvailable: user.isAvailable,
-                currentTeamId: user.currentTeamId
+                currentTeamId: user.currentTeamId,
+                trustScore: user.trustScore ?? 100,
             }
         })
 
