@@ -1,10 +1,13 @@
 export const dynamic = 'force-dynamic';
 // API Route: User Login
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import dbConnect from '@/lib/db'
 import { User } from '@/models'
+import { corsJson, OPTIONS } from '@/lib/cors'
+
+export { OPTIONS }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
 
@@ -17,11 +20,8 @@ export async function POST(request: NextRequest) {
 
         // Validation
         if (!email || !password) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'Email and password are required',
-                },
+            return corsJson(
+                { success: false, error: 'Email and password are required' },
                 { status: 400 }
             )
         }
@@ -29,22 +29,16 @@ export async function POST(request: NextRequest) {
         // Find user
         const user = await User.findOne({ email: email.toLowerCase() })
         if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'Invalid email or password',
-                },
+            return corsJson(
+                { success: false, error: 'Invalid email or password' },
                 { status: 401 }
             )
         }
 
         // Check if user is active
         if (!user.isActive) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'Account is inactive. Please contact support.',
-                },
+            return corsJson(
+                { success: false, error: 'Account is inactive. Please contact support.' },
                 { status: 403 }
             )
         }
@@ -52,11 +46,8 @@ export async function POST(request: NextRequest) {
         // Verify password
         const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
         if (!isPasswordValid) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'Invalid email or password',
-                },
+            return corsJson(
+                { success: false, error: 'Invalid email or password' },
                 { status: 401 }
             )
         }
@@ -74,12 +65,9 @@ export async function POST(request: NextRequest) {
                 role: user.requestedRole,
             },
             JWT_SECRET,
-            {
-                expiresIn: '7d', // Token valid for 7 days
-            }
+            { expiresIn: '7d' }
         )
 
-        // User response (without password)
         const userResponse = {
             id: user._id,
             email: user.email,
@@ -88,25 +76,19 @@ export async function POST(request: NextRequest) {
             avatar: user.avatar,
             emailVerified: user.emailVerified,
             isActive: user.isActive,
+            role: user.requestedRole,
             lastLoginAt: user.lastLoginAt,
         }
 
-        return NextResponse.json({
+        return corsJson({
             success: true,
-            data: {
-                user: userResponse,
-                token,
-            },
+            data: { user: userResponse, token },
             message: 'Login successful',
         })
     } catch (error: any) {
         console.error('Error logging in user:', error)
-        return NextResponse.json(
-            {
-                success: false,
-                error: 'Failed to login',
-                message: error.message,
-            },
+        return corsJson(
+            { success: false, error: 'Failed to login', message: error.message },
             { status: 500 }
         )
     }

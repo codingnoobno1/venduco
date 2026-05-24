@@ -1,8 +1,18 @@
-# example netlify.toml
 [build]
   command = "npm run build"
   functions = "netlify/functions"
   publish = ".next"
+
+# ── CORS headers for all API routes ────────────────────────────────
+# Belt-and-suspenders: CDN returns these even before Next.js runs,
+# so Flutter / Dio / curl get through on every request including OPTIONS.
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin  = "*"
+    Access-Control-Allow-Methods = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type,Authorization,X-Requested-With"
+    Access-Control-Max-Age       = "86400"
 
   ## Uncomment to use this redirect for Single Page Applications like create-react-app.
   ## Not needed for static site generators.

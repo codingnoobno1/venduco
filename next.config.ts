@@ -1,6 +1,22 @@
 import type { NextConfig } from "next";
 
+const CORS_HEADERS = [
+  { key: 'Access-Control-Allow-Origin',  value: '*' },
+  { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,PATCH,DELETE,OPTIONS' },
+  { key: 'Access-Control-Allow-Headers', value: 'Content-Type,Authorization,X-Requested-With' },
+  { key: 'Access-Control-Max-Age',       value: '86400' },
+];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        // Apply CORS to every API route
+        source: '/api/:path*',
+        headers: CORS_HEADERS,
+      },
+    ];
+  },
   /**
    * Next/Image MUST be unoptimized for static export
    */
