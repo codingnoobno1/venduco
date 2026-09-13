@@ -133,9 +133,9 @@ export default function AIProposalMakerPage() {
 
                 <ProposalStepIndicator currentStep={Math.floor(step)} />
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12">
                     {/* Left Panel: Workflow */}
-                    <div className="lg:col-span-8 space-y-8">
+                    <div className="lg:col-span-8 min-w-0 space-y-8">
                         {step === 0 && (
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                                 <TenderUploader onUpload={startAnalysis} />
@@ -216,27 +216,29 @@ export default function AIProposalMakerPage() {
 
                         {step === 4 && (
                             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg">
-                                    <AITabSwitcher currentStep={step} onStepClick={(s) => setStep(s === 0 ? 1.5 : s === 1 ? 1.5 : s === 2 ? 2 : 4)} />
-                                    <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
-                                        <button
-                                            onClick={() => setViewMode('preview')}
-                                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${viewMode === 'preview' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
-                                        >
-                                            PROPOSAL DRAFT
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode('tender')}
-                                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${viewMode === 'tender' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
-                                        >
-                                            SOURCE TENDER
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode('analysis')}
-                                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${viewMode === 'analysis' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
-                                        >
-                                            ANALYSIS
-                                        </button>
+                                <div className="flex flex-col gap-4 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                        <AITabSwitcher currentStep={step} onStepClick={(s) => setStep(s === 0 ? 1.5 : s === 1 ? 1.5 : s === 2 ? 2 : 4)} />
+                                        <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
+                                            <button
+                                                onClick={() => setViewMode('preview')}
+                                                className={`px-3 py-2 text-[12px] whitespace-nowrap font-bold rounded-lg transition-all ${viewMode === 'preview' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
+                                            >
+                                                PROPOSAL DRAFT
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('tender')}
+                                                className={`px-3 py-2 text-[12px] whitespace-nowrap font-bold rounded-lg transition-all ${viewMode === 'tender' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
+                                            >
+                                                SOURCE TENDER
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('analysis')}
+                                                className={`px-3 py-2 text-[12px] whitespace-nowrap font-bold rounded-lg transition-all ${viewMode === 'analysis' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500'}`}
+                                            >
+                                                ANALYSIS
+                                            </button>
+                                        </div>
                                     </div>
                                     <DownloadButton />
                                 </div>
@@ -255,9 +257,9 @@ export default function AIProposalMakerPage() {
                     </div>
 
                     {/* Right Panel: AI Context */}
-                    <div className="lg:col-span-4 space-y-6">
+                    <div className="lg:col-span-4 min-w-0 space-y-6">
                         {step >= 1.5 && (
-                            <div className="sticky top-6 space-y-6">
+                            <div className="lg:sticky lg:top-24 space-y-6">
                                 <ProposalReasoningPanel />
                                 <ComplianceCoverage />
                                 <RiskFlags />
@@ -283,7 +285,7 @@ export default function AIProposalMakerPage() {
                                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                                     <Brain className="w-48 h-48" />
                                 </div>
-                                <h4 className="font-black text-xl text-white relative z-10 tracking-tight">Enterprise AI Workflow</h4>
+                                <h4 className="font-black text-xl !text-white relative z-10 tracking-tight">Enterprise AI Workflow</h4>
                                 <div className="space-y-6 relative z-10">
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">Process discipline</p>

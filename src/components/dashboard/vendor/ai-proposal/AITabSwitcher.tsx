@@ -17,7 +17,7 @@ export function AITabSwitcher({ currentStep, onStepClick }: AITabSwitcherProps) 
     ]
 
     return (
-        <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl max-w-lg">
+        <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl max-w-full overflow-x-auto">
             {tabs.map((tab, i) => {
                 const isActive = (currentStep === 0 && i === 0) ||
                     (currentStep === 1 && i === 1) ||
@@ -29,7 +29,7 @@ export function AITabSwitcher({ currentStep, onStepClick }: AITabSwitcherProps) 
                         key={i}
                         disabled={currentStep < i && i !== 0}
                         onClick={() => onStepClick(i)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-xs font-bold transition-all ${isActive
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 whitespace-nowrap rounded-lg text-[12px] font-bold transition-all ${isActive
                                 ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-30'
                             }`}
