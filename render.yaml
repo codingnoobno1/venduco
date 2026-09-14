@@ -1,0 +1,26 @@
+# Render Blueprint — VendorConnect API (same Next.js app, run as an always-on Node server)
+# Render has no Mumbai region; Singapore is the closest to users in India.
+services:
+  - type: web
+    name: venduco-api
+    runtime: node
+    region: singapore
+    # Free plan sleeps after 15 min idle (30s+ cold starts) — use starter or above.
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start -- -p $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
