@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('New role')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('roles')}"></aside>
+    <main>
+        <p class="crumbs"><a th:href="@{/admin/roles}">Roles</a> /</p>
+        <h1>New role</h1>
+        <p class="notice error" th:if="${error}" th:text="${error}" role="alert">Problem.</p>
+
+        <form th:action="@{/admin/roles}" method="post">
+            <label for="key">Key</label>
+            <input id="key" name="key" th:value="${form.key}" required pattern="[A-Za-z][A-Za-z0-9_]{2,48}"
+                   placeholder="CHIEF_MECHANICAL_ENGINEER">
+            <p class="hint">Capital letters, digits and underscores. It cannot be changed later.</p>
+
+            <label for="name">Name</label>
+            <input id="name" name="name" th:value="${form.name}" required maxlength="80">
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="2" maxlength="300" th:text="${form.description}"></textarea>
+
+            <div class="row">
+                <div>
+                    <label for="portal">Portal</label>
+                    <select id="portal" name="portal">
+                        <option th:each="p : ${portals}" th:value="${p}" th:text="${p}" th:selected="${p == form.portal}">BUYER</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="scopeLevel">Assigned at</label>
+                    <select id="scopeLevel" name="scopeLevel">
+                        <option th:each="s : ${scopeLevels}" th:value="${s}" th:text="${#strings.toLowerCase(s)} + ' level'"
+                                th:selected="${s == form.scopeLevel}">project level</option>
+                    </select>
+                </div>
+            </div>
+            <p class="hint">The level decides what an assignment of this role must name: an organisation, a project, or
+                disciplines, packages or sections within a project. It cannot be changed later.</p>
+
+            <label for="dashboard">Default dashboard key <span class="muted">(optional)</span></label>
+            <input id="dashboard" name="defaultDashboardKey" th:value="${form.defaultDashboardKey}" maxlength="80">
+
+            <h2>Permissions</h2>
+            <table class="grid">
+                <tbody>
+                <tr th:each="g : ${groups}">
+                    <th th:text="${g.resource}">resource</th>
+                    <td>
+                        <label th:each="p : ${g.permissions}" class="check" th:title="${p.description}">
+                            <input type="checkbox" name="permissions" th:value="${p.key}"
+                                   th:checked="${#sets.contains(form.permissions, p.key)}">
+                            <span th:text="${p.action}">read</span>
+                            <span class="tag sensitive" th:if="${p.sensitive}">sensitive</span>
+                        </label>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <button type="submit" class="primary">Create role</button>
+            <a th:href="@{/admin/roles}">Cancel</a>
+        </form>
+    </main>
+</div>
+</body>
+</html>

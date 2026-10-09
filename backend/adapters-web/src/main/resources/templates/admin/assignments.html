@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Assignments')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('assignments')}"></aside>
+    <main>
+        <h1>Assignments</h1>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <p><a class="button primary" th:href="@{/admin/assignments/new}">New assignment</a></p>
+
+        <form class="toolbar" th:action="@{/admin/assignments}" method="get">
+            <label for="roleId">Role</label>
+            <select id="roleId" name="roleId">
+                <option value="">All roles</option>
+                <option th:each="o : ${roleOptions}" th:value="${o.value}" th:text="${o.label}"
+                        th:selected="${o.value == roleId}">Role</option>
+            </select>
+            <label for="show">Show</label>
+            <select id="show" name="show">
+                <option value="current" th:selected="${show == 'current'}">Not revoked</option>
+                <option value="usable" th:selected="${show == 'usable'}">Working now</option>
+                <option value="all" th:selected="${show == 'all'}">Everything, including revoked</option>
+            </select>
+            <button type="submit">Apply</button>
+        </form>
+
+        <p class="muted" th:if="${rows.isEmpty()}">No assignments match.</p>
+        <table th:unless="${rows.isEmpty()}">
+            <thead>
+            <tr><th>User</th><th>Role</th><th>Where</th><th>Scope</th><th>Level</th><th>Limit</th><th>Valid until</th><th>State</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${rows}">
+                <td><a th:href="@{/admin/assignments/{id}(id=${a.id})}" th:text="${a.user}">User</a></td>
+                <td th:text="${a.roleName}">Role</td>
+                <td th:text="${a.where}">where</td>
+                <td th:text="${a.scope}">scope</td>
+                <td th:text="${a.accessLevel}">FULL</td>
+                <td th:text="${a.approvalLimit} ?: '—'">limit</td>
+                <td th:text="${a.validUntil} ?: 'No end date'">date</td>
+                <td>
+                    <span class="pill ok" th:if="${a.usable}">Working</span>
+                    <span class="pill bad" th:if="${!a.usable and a.status == 'REVOKED'}">Revoked</span>
+                    <span class="pill warn" th:if="${!a.usable and a.status == 'SUSPENDED'}">Suspended</span>
+                    <span class="pill warn" th:if="${!a.usable and a.status == 'ACTIVE'}">Not in effect</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </main>
+</div>
+</body>
+</html>

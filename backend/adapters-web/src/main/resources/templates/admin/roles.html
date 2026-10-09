@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Roles')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('roles')}"></aside>
+    <main>
+        <h1>Roles &amp; permissions</h1>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <p><a class="button primary" th:href="@{/admin/roles/new}">New role</a></p>
+        <p class="hint">Built-in roles cannot be edited. Open one and make a copy to customise it.</p>
+
+        <table>
+            <thead><tr><th>Role</th><th>Key</th><th>Portal</th><th>Assigned at</th><th>Permissions</th><th>Type</th></tr></thead>
+            <tbody>
+            <tr th:each="r : ${roles}">
+                <td><a th:href="@{/admin/roles/{id}(id=${r.id})}" th:text="${r.name}">Role</a>
+                    <span class="pill bad" th:unless="${r.isActive()}">Inactive</span></td>
+                <td><code th:text="${r.key}">KEY</code></td>
+                <td th:text="${r.portal}">BUYER</td>
+                <td th:text="${#strings.toLowerCase(r.scopeLevel)} + ' level'">project level</td>
+                <td th:text="${r.permissions.size()}">0</td>
+                <td>
+                    <span class="tag" th:if="${r.isSystem()}">Built-in</span>
+                    <span class="tag custom" th:unless="${r.isSystem()}">Custom</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </main>
+</div>
+</body>
+</html>

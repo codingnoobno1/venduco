@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Users')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('users')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Users</h1>
+                <p class="lead">Everyone with an account: engineers, managers, vendors and administrators.</p>
+            </div>
+            <div class="head-actions"><a class="button primary" th:href="@{/admin/users/new}">Add user</a></div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <form class="toolbar" th:action="@{/admin/users}" method="get">
+            <label for="q" class="sr-only">Search</label>
+            <input id="q" name="q" type="search" placeholder="Name or email" th:value="${q}">
+            <label for="approval">Approval</label>
+            <select id="approval" name="approval">
+                <option value="">Any</option>
+                <option th:each="a : ${approvals}" th:value="${a}" th:selected="${a == approval}"
+                        th:text="${#strings.capitalize(#strings.toLowerCase(a))}">Pending</option>
+            </select>
+            <button type="submit">Apply</button>
+            <a th:if="${q != null or approval != null}" th:href="@{/admin/users}">Clear</a>
+        </form>
+
+        <div class="empty" th:if="${rows.isEmpty()}"><strong>No users match.</strong></div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Person</th><th>Company</th><th>Base role</th>
+                    <th th:if="${showAssignments}">Working assignments</th>
+                    <th>Approval</th><th>Account</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${rows}">
+                    <td><a th:href="@{/admin/users/{id}(id=${u.id})}" th:text="${u.fullName}">Name</a>
+                        <span class="tag" th:if="${u.isSelf()}">you</span>
+                        <span class="sub" th:text="${u.email}">email</span></td>
+                    <td><span th:text="${u.company} ?: 'Individual'" th:classappend="${u.company == null} ? 'muted'">Company</span></td>
+                    <td><code th:text="${u.legacyRole}">VENDOR</code></td>
+                    <td th:if="${showAssignments}" th:text="${u.usableAssignments}">1</td>
+                    <td><span th:replace="~{admin/_layout :: status(${u.approval})}"></span></td>
+                    <td>
+                        <span class="pill ok" th:if="${u.active}">Active</span>
+                        <span class="pill bad" th:unless="${u.active}">Deactivated</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

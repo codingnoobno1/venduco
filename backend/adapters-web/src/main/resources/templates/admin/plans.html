@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Plans')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('plans')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <p class="crumbs"><a th:href="@{/admin/billing}">Subscriptions</a> /</p>
+                <h1>Plans</h1>
+                <p class="lead">What a company or an individual pays each month. A plan that is switched off keeps its
+                    current subscribers but cannot be given to new ones.</p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+        <p th:replace="~{admin/_layout :: paymentOff}"></p>
+
+        <div class="empty" th:if="${plans.isEmpty()}"><strong>No plans yet.</strong> Create the first one below.</div>
+
+        <section class="card narrow" th:each="p : ${plans}">
+            <h2><span th:text="${p.name}">Plan</span> <code th:text="${p.code}">CODE</code>
+                <span class="pill off" th:unless="${p.active}">Not offered</span></h2>
+            <p class="muted">For <span th:text="${#strings.toLowerCase(p.audience)}">companies</span> ·
+                <span th:text="${p.subscribers}">0</span> subscriber(s) · currently <strong th:text="${p.price}">INR 0</strong> per month</p>
+            <form th:action="@{/admin/billing/plans/{id}(id=${p.id})}" method="post">
+                <div class="row">
+                    <div>
+                        <label th:for="'name-' + ${p.id}">Name</label>
+                        <input th:id="'name-' + ${p.id}" name="name" th:value="${p.name}" required maxlength="80">
+                    </div>
+                    <div>
+                        <label th:for="'price-' + ${p.id}">Monthly price, ₹</label>
+                        <input th:id="'price-' + ${p.id}" name="price" inputmode="decimal" th:value="${p.priceInput}" required>
+                    </div>
+                </div>
+                <label th:for="'desc-' + ${p.id}">Description</label>
+                <input th:id="'desc-' + ${p.id}" name="description" th:value="${p.description}" maxlength="300">
+                <div><label class="check"><input type="checkbox" name="active" value="true" th:checked="${p.active}"> Offered to new subscribers</label></div>
+                <button type="submit">Save plan</button>
+            </form>
+        </section>
+
+        <section class="card narrow">
+            <h2>New plan</h2>
+            <form th:action="@{/admin/billing/plans}" method="post">
+                <div class="row">
+                    <div>
+                        <label for="code">Code</label>
+                        <input id="code" name="code" required pattern="[A-Za-z][A-Za-z0-9_\-]{1,29}" placeholder="COMPANY-STANDARD">
+                    </div>
+                    <div>
+                        <label for="name">Name</label>
+                        <input id="name" name="name" required maxlength="80" placeholder="Company Standard">
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label for="audience">For</label>
+                        <select id="audience" name="audience">
+                            <option th:each="a : ${audiences}" th:value="${a.value}" th:text="${a.label}">Companies</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="price">Monthly price, ₹</label>
+                        <input id="price" name="price" inputmode="decimal" required placeholder="5000">
+                    </div>
+                </div>
+                <label for="description">Description <span class="muted">(optional)</span></label>
+                <input id="description" name="description" maxlength="300">
+                <button type="submit" class="primary">Create plan</button>
+                <p class="hint">The code and who the plan is for cannot be changed afterwards.</p>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>

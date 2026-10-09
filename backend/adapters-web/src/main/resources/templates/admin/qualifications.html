@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Qualifications')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('qualifications')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Qualifications</h1>
+                <p class="lead">Applications partners have filled in from the partner portal. Open one to read it and decide.</p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <nav class="tabs" aria-label="Filter applications">
+            <a th:href="@{/admin/qualifications}" th:classappend="${show == 'waiting'} ? 'active'">Waiting for review
+                <span class="count" th:text="${waitingCount}">0</span></a>
+            <a th:href="@{/admin/qualifications(show='all')}" th:classappend="${show == 'all'} ? 'active'">All
+                <span class="count" th:text="${totalCount}">0</span></a>
+        </nav>
+
+        <div class="empty" th:if="${rows.isEmpty()}">
+            <strong th:text="${show == 'waiting'} ? 'Nothing is waiting for review.' : 'No applications yet.'">Empty</strong>
+        </div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead><tr><th>Applicant</th><th>Status</th><th>Version</th><th>Sections complete</th><th>Submitted</th><th>Last change</th></tr></thead>
+                <tbody>
+                <tr th:each="r : ${rows}">
+                    <td><a th:href="@{/admin/qualifications/{id}(id=${r.id})}" th:text="${r.applicant}">Applicant</a></td>
+                    <td><span th:replace="~{admin/_layout :: status(${r.status})}"></span></td>
+                    <td th:text="${r.version}">1</td>
+                    <td th:text="${r.progress}">0 of 6</td>
+                    <td class="nowrap" th:text="${r.submitted} ?: '—'">date</td>
+                    <td class="nowrap" th:text="${r.updated}">date</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      # Only the admin console uses a server session; the API is stateless.
+      timeout: 30m
+      cookie:
+        name: VC_ADMIN_SESSION
+        path: /admin
+        http-only: true
+        secure: true
+        same-site: lax
+
+spring:
+  application:
+    name: vendorconnect-core
+
+  # ── Phase 1: SQLite (zero-setup, file-based) ──
+  # VC_DB_PATH is relative to the working directory unless absolute.
+  # foreign_keys: SQLite ignores FOREIGN KEY constraints unless this is on.
+  # WAL + busy_timeout + a single pooled connection avoid SQLITE_BUSY under concurrent writes.
+  datasource:
+    url: jdbc:sqlite:${VC_DB_PATH:vendorconnect.db}?foreign_keys=true&journal_mode=WAL&busy_timeout=5000
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+      connection-timeout: 10000
+
+  jpa:
+    database-platform: com.vendorconnect.persistence.jpa.dialect.VendorConnectSQLiteDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  servlet:
+    multipart:
+      # Qualification documents. The use case enforces 10 MB per file; this is the outer bound per request.
+      max-file-size: 12MB
+      max-request-size: 13MB
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+# ── Health: GET /api/v1/health (real DB check via Actuator) ──
+management:
+  endpoints:
+    web:
+      base-path: /api/v1
+      discovery:
+        enabled: false
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when-authorized
+      roles: ADMIN
+
+# ── Application Config ──
+app:
+  jwt:
+    # Required. At least 32 bytes. Set via the JWT_SECRET environment variable.
+    secret: ${JWT_SECRET:}
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+    cookie-name: "vc_token"
+    refresh-cookie-name: "vc_refresh"
+    cookie-secure: true
+    cookie-same-site: "Lax"
+
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
+
+  storage:
+    type: local  # Phase 1: local, Phase 3: s3
+    local-path: "./uploads"
+
+  ai:
+    enabled: false  # Phase 1: mock adapter, Phase 3: true
+    base-url: "http://localhost:8000"
+
+  # Admin console (server-rendered, under /admin). Own port by default; set ADMIN_PORT to the same value
+  # as SERVER_PORT (or to 0) to serve it on the main port. ADMIN_ADDRESS binds it to one interface.
+  admin:
+    port: ${ADMIN_PORT:8081}
+    address: ${ADMIN_ADDRESS:}
+
+  # Starting values of the two switches on the console's Settings page. Once changed there, the
+  # console's value wins and these are no longer consulted.
+  #   require-approval false = every new user and company is approved automatically
+  #   billing.enforce  false = unpaid subscriptions do not block anyone
+  onboarding:
+    require-approval: ${ONBOARDING_REQUIRE_APPROVAL:false}
+
+  billing:
+    enforce: ${BILLING_ENFORCE:false}
+    # Only matter while payment is enforced: days of grace after a paid period ends, and whether
+    # an account with no plan at all is refused too.
+    grace-days: ${BILLING_GRACE_DAYS:5}
+    require-subscription: ${BILLING_REQUIRE_SUBSCRIPTION:false}
+
+  security:
+    # Secret for encrypting sensitive answers at rest. Set it before real partner data is entered.
+    data-key: ${APP_DATA_KEY:}
+
+  # Optional: creates the first ADMIN on startup if no user with this email exists.
+  bootstrap:
+    admin-email: ${VC_ADMIN_EMAIL:}
+    admin-password: ${VC_ADMIN_PASSWORD:}
+
+logging:
+  level:
+    com.vendorconnect: INFO
+    org.springframework.security: INFO

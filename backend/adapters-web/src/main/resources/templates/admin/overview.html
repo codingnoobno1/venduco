@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Overview')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('overview')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Overview</h1>
+                <p class="lead">What is waiting for a decision, and where access and billing stand.</p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <th:block th:if="${pendingCompanyCount != null}">
+            <h2>Onboarding</h2>
+            <div class="tiles">
+                <a class="tile" th:classappend="${pendingCompanyCount > 0} ? 'warn' : 'ok'" th:href="@{/admin/approvals}">
+                    <span class="label">Companies awaiting approval</span>
+                    <strong th:text="${pendingCompanyCount}">0</strong>
+                    <span class="muted">of <span th:text="${companyCount}">0</span> companies</span>
+                </a>
+                <a class="tile" th:classappend="${pendingPeopleCount > 0} ? 'warn' : 'ok'" th:href="@{/admin/approvals(tab='individuals')}">
+                    <span class="label">People awaiting approval</span>
+                    <strong th:text="${pendingPeopleCount}">0</strong>
+                    <span class="muted">engineers and other individuals</span>
+                </a>
+            </div>
+        </th:block>
+
+        <th:block th:if="${projectCount != null or openTenderCount != null}">
+            <h2>Delivery</h2>
+            <div class="tiles">
+                <a class="tile quiet" th:if="${projectCount != null}" th:href="@{/admin/projects}">
+                    <span class="label">Projects</span>
+                    <strong th:text="${projectCount}">0</strong>
+                    <span class="muted"><span th:text="${activeProjectCount}">0</span> in progress</span>
+                </a>
+                <a class="tile" th:if="${onHoldProjectCount != null}" th:classappend="${onHoldProjectCount > 0} ? 'warn' : 'quiet'"
+                   th:href="@{/admin/projects(status='ON_HOLD')}">
+                    <span class="label">Projects on hold</span>
+                    <strong th:text="${onHoldProjectCount}">0</strong>
+                    <span class="muted">need a decision to restart</span>
+                </a>
+                <a class="tile" th:if="${delayedPackageCount != null}" th:classappend="${delayedPackageCount > 0} ? 'bad' : 'quiet'"
+                   th:href="@{/admin/projects}">
+                    <span class="label">Delayed work packages</span>
+                    <strong th:text="${delayedPackageCount}">0</strong>
+                    <span class="muted">across all projects</span>
+                </a>
+                <a class="tile quiet" th:if="${openTenderCount != null}" th:href="@{/admin/tenders(status='PUBLISHED')}">
+                    <span class="label">Tenders open for bidding</span>
+                    <strong th:text="${openTenderCount}">0</strong>
+                    <span class="muted"><span th:text="${draftTenderCount}">0</span> drafts</span>
+                </a>
+            </div>
+        </th:block>
+
+        <th:block th:if="${subscriptionCount != null}">
+            <h2>Billing</h2>
+            <div class="tiles">
+                <a class="tile" th:href="@{/admin/billing}">
+                    <span class="label">Monthly recurring</span>
+                    <strong class="money" th:text="${recurring}">—</strong>
+                    <span class="muted">from <span th:text="${paidCount}">0</span> paid-up subscriptions</span>
+                </a>
+                <a class="tile" th:classappend="${awaitingPaymentCount > 0} ? 'warn' : 'quiet'" th:href="@{/admin/billing(show='attention')}">
+                    <span class="label">Awaiting first payment</span>
+                    <strong th:text="${awaitingPaymentCount}">0</strong>
+                    <span class="muted">access not open yet</span>
+                </a>
+                <a class="tile" th:classappend="${overdueCount > 0} ? 'bad' : 'quiet'" th:href="@{/admin/billing(show='attention')}">
+                    <span class="label">Payment overdue</span>
+                    <strong th:text="${overdueCount}">0</strong>
+                    <span class="muted">in grace or already blocked</span>
+                </a>
+                <a class="tile quiet" th:href="@{/admin/billing}">
+                    <span class="label">Subscriptions</span>
+                    <strong th:text="${subscriptionCount}">0</strong>
+                    <span class="muted">in total</span>
+                </a>
+            </div>
+        </th:block>
+
+        <th:block th:if="${userCount != null or roleCount != null or usableAssignmentCount != null}">
+            <h2>Access</h2>
+            <div class="tiles">
+                <a class="tile quiet" th:if="${userCount != null}" th:href="@{/admin/users}">
+                    <span class="label">Users</span>
+                    <strong th:text="${userCount}">0</strong>
+                    <span class="muted"><span th:text="${activeUserCount}">0</span> active</span>
+                </a>
+                <a class="tile quiet" th:if="${roleCount != null}" th:href="@{/admin/roles}">
+                    <span class="label">Roles</span>
+                    <strong th:text="${roleCount}">0</strong>
+                    <span class="muted"><span th:text="${customRoleCount}">0</span> custom</span>
+                </a>
+                <a class="tile quiet" th:if="${usableAssignmentCount != null}" th:href="@{/admin/assignments(show='usable')}">
+                    <span class="label">Working assignments</span>
+                    <strong th:text="${usableAssignmentCount}">0</strong>
+                    <span class="muted"><span th:text="${suspendedCount}">0</span> suspended</span>
+                </a>
+                <div class="tile" th:if="${expiringCount != null}" th:classappend="${expiringCount > 0} ? 'warn' : 'quiet'">
+                    <span class="label">Assignments expiring in 30 days</span>
+                    <strong th:text="${expiringCount}">0</strong>
+                    <span class="muted">extend or let lapse</span>
+                </div>
+                <div class="tile" th:if="${usersWithoutAccess != null}" th:classappend="${usersWithoutAccess > 0} ? 'warn' : 'quiet'">
+                    <span class="label">Active users with no working assignment</span>
+                    <strong th:text="${usersWithoutAccess}">0</strong>
+                    <span class="muted">cannot do anything yet</span>
+                </div>
+            </div>
+        </th:block>
+
+        <section th:if="${recent != null}">
+            <h2>Recent changes</h2>
+            <p class="empty" th:if="${recent.isEmpty()}">Nothing has been changed yet.</p>
+            <div class="table-wrap" th:unless="${recent.isEmpty()}">
+                <table>
+                    <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead>
+                    <tbody>
+                    <tr th:each="r : ${recent}">
+                        <td class="nowrap" th:text="${r.at}">time</td>
+                        <td th:text="${r.actor}">actor</td>
+                        <td><code th:text="${r.action}">ACTION</code></td>
+                        <td th:text="${r.summary}">summary</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p><a th:href="@{/admin/audit}">Full audit log</a></p>
+        </section>
+    </main>
+</div>
+</body>
+</html>

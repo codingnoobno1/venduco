@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Settings')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('settings')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Settings</h1>
+                <p class="lead">Platform-wide switches. A change applies straight away, with no restart, and is written to the audit log.</p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <form th:action="@{/admin/settings}" method="post">
+            <section class="card narrow">
+                <h2>Onboarding <span class="pill" th:classappend="${settings.autoApproveRegistrations} ? 'ok' : 'off'"
+                                     th:text="${settings.autoApproveRegistrations} ? 'Automatic approval on' : 'Manual approval'">On</span></h2>
+                <label class="check">
+                    <input type="checkbox" name="autoApproveRegistrations" value="true" th:checked="${settings.autoApproveRegistrations}">
+                    Approve every new user and company automatically
+                </label>
+                <p class="hint">On: anyone who registers can use the platform at once. Off: they wait in Approvals until an
+                    administrator lets them in. Either way you can still suspend or reject an account afterwards.</p>
+
+                <th:block th:if="${waiting > 0}">
+                    <p class="notice warn"><span th:text="${waiting}">0</span> account(s) are waiting for approval right now.
+                        Turning automatic approval on does not approve them by itself.</p>
+                    <label class="check" th:if="${canApprove}">
+                        <input type="checkbox" name="approveWaiting" value="true">
+                        Also approve the <span th:text="${waiting}">0</span> waiting now
+                    </label>
+                </th:block>
+            </section>
+
+            <section class="card narrow">
+                <h2>Payment <span class="pill" th:classappend="${settings.paymentEnforced} ? 'ok' : 'off'"
+                                  th:text="${settings.paymentEnforced} ? 'Enforced' : 'Not enforced'">Off</span></h2>
+                <label class="check">
+                    <input type="checkbox" name="paymentEnforced" value="true" th:checked="${settings.paymentEnforced}">
+                    Block accounts whose subscription is unpaid
+                </label>
+                <p class="hint">Off: plans, subscriptions and payments can still be recorded, but nobody is blocked for not
+                    paying. On: an account on a plan can use the platform only while its monthly amount is paid.</p>
+                <p class="notice warn" th:if="${!settings.paymentEnforced and wouldBeBlocked > 0}">
+                    Turning this on now would close access for <span th:text="${wouldBeBlocked}">0</span> subscription(s)
+                    that are unpaid, suspended or cancelled.</p>
+            </section>
+
+            <button type="submit" class="primary">Save settings</button>
+        </form>
+    </main>
+</div>
+</body>
+</html>

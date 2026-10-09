@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Payments')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('payments')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <p class="crumbs"><a th:href="@{/admin/billing}">Subscriptions</a> /</p>
+                <h1>Payment ledger</h1>
+                <p class="lead">Every payment recorded, newest first. Entries are never edited; a correction is a new entry.</p>
+            </div>
+        </header>
+
+        <div class="empty" th:if="${rows.isEmpty()}"><strong>No payments recorded yet.</strong></div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead><tr><th>Received</th><th>Account</th><th class="num">Amount</th><th>Method</th><th>Reference</th><th>Covers</th><th>Recorded by</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${rows}">
+                    <td class="nowrap" th:text="${p.receivedOn}">date</td>
+                    <td><a th:href="@{/admin/billing/subscriptions/{id}(id=${p.subscriptionId})}" th:text="${p.subject}">Account</a></td>
+                    <td class="num" th:text="${p.amount}">INR 0</td>
+                    <td th:text="${p.method}">Bank transfer</td>
+                    <td><span th:text="${p.reference} ?: '—'">ref</span>
+                        <span class="sub" th:if="${p.note}" th:text="${p.note}">note</span></td>
+                    <td class="nowrap" th:text="${p.period}">period</td>
+                    <td th:text="${p.recordedBy}">admin</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="muted" th:if="${rows.size() == limit}">Showing the latest <span th:text="${limit}">200</span> payments.</p>
+    </main>
+</div>
+</body>
+</html>

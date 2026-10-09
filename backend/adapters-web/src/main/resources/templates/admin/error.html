@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Error')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('')}"></aside>
+    <main>
+        <h1><span th:text="${status}">400</span> · <span th:text="${reason}">Bad Request</span></h1>
+        <p class="notice error" th:text="${message}" role="alert">What went wrong.</p>
+        <p><a th:href="@{/admin}">Back to overview</a></p>
+    </main>
+</div>
+</body>
+</html>

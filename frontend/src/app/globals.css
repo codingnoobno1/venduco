@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f1b2d;
+  --surface-muted: #f3f6fb;
+  --border-subtle: #e3e8f0;
+  --brand: #1257e0;
+  --brand-strong: #0f3fa8;
+  --navy: #0b1a33;
+  --navy-deep: #0a1630;
+  --muted: #5b6b82;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a {
+  cursor: pointer;
+}
+
+::selection {
+  background: #dbeafe;
+  color: #172554;
+}
+
+.dashboard-canvas {
+  color: #0f172a;
+}
+
+.dashboard-eyebrow {
+  margin: 0;
+  color: #52617a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+}
+
+.dashboard-panel {
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 27, 45, 0.03);
+}
+
+/* Shared table look from the redesign screens: quiet header row, roomy cells, hover tint. */
+.vc-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12.5px;
+}
+
+.vc-table thead th {
+  border-bottom: 1px solid var(--border-subtle);
+  background: #f7f9fc;
+  padding: 9px 12px;
+  color: #3b4a60;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vc-table tbody td {
+  border-bottom: 1px solid #edf1f6;
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+.vc-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.vc-table tbody tr:hover td {
+  background: #f5f8ff;
+}
+
+.dashboard-primary-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  padding: 0 16px;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 5px 12px rgba(20, 99, 243, 0.2);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.dashboard-primary-button:hover {
+  background: linear-gradient(135deg, #2472ff, #0b46c5);
+  box-shadow: 0 7px 18px rgba(20, 99, 243, 0.26);
+  transform: translateY(-1px);
+}
+
+.dashboard-primary-button:active {
+  transform: translateY(0);
+}
+
+.dashboard-sidebar-nav {
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+  scrollbar-width: thin;
+}
+
+.dashboard-sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dashboard-sidebar-nav::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+

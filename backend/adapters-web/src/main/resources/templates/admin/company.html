@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head(${c.name})}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('companies')}"></aside>
+    <main th:with="here=${'/admin/companies/' + c.id}">
+        <header class="page-head">
+            <div>
+                <p class="crumbs"><a th:href="@{/admin/companies}">Companies</a> /</p>
+                <h1><span th:text="${c.name}">Company</span> <span th:replace="~{admin/_layout :: status(${c.status})}"></span></h1>
+            </div>
+            <div class="head-actions" th:if="${canOpenUsers}">
+                <a class="button" th:href="@{/admin/users/new(organizationId=${c.id})}">Add a person</a>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <div class="columns">
+            <div>
+                <section class="card">
+                    <h2>People</h2>
+                    <p class="muted" th:if="${members.isEmpty()}">Nobody belongs to this company yet.</p>
+                    <div class="table-wrap" th:unless="${members.isEmpty()}">
+                        <table>
+                            <thead><tr><th>Person</th><th>Joined</th><th>Approval</th><th>Decision</th></tr></thead>
+                            <tbody>
+                            <tr th:each="p : ${members}">
+                                <td>
+                                    <a th:if="${canOpenUsers}" th:href="@{/admin/users/{id}(id=${p.id})}" th:text="${p.fullName}">Name</a>
+                                    <span th:unless="${canOpenUsers}" th:text="${p.fullName}">Name</span>
+                                    <span class="tag" th:if="${p.isSelf()}">you</span>
+                                    <span class="pill off" th:unless="${p.active}">Deactivated</span>
+                                    <span class="sub" th:text="${p.email}">email</span>
+                                </td>
+                                <td class="nowrap" th:text="${p.registered}">date</td>
+                                <td><span th:replace="~{admin/_layout :: status(${p.status})}"></span>
+                                    <span class="sub" th:if="${p.note}" th:text="${p.note}">note</span></td>
+                                <td class="row-actions">
+                                    <th:block th:unless="${p.isSelf()}">
+                                        <form th:if="${p.status != 'APPROVED'}" th:action="@{/admin/people/{id}/decision(id=${p.id})}" method="post">
+                                            <input type="hidden" name="status" value="APPROVED">
+                                            <input type="hidden" name="returnTo" th:value="${here}">
+                                            <button type="submit" class="approve">Approve</button>
+                                        </form>
+                                        <form th:if="${p.status == 'PENDING' or p.status == 'APPROVED'}" th:action="@{/admin/people/{id}/decision(id=${p.id})}" method="post">
+                                            <input type="hidden" name="status" th:value="${p.status == 'PENDING'} ? 'REJECTED' : 'SUSPENDED'">
+                                            <input type="hidden" name="returnTo" th:value="${here}">
+                                            <label class="sr-only" th:for="'m-' + ${p.id}">Reason</label>
+                                            <input th:id="'m-' + ${p.id}" name="note" placeholder="Reason" required maxlength="300">
+                                            <button type="submit" class="danger" th:text="${p.status == 'PENDING'} ? 'Reject' : 'Suspend'">Reject</button>
+                                        </form>
+                                    </th:block>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="hint">A person can use the platform only when both they and the company are approved.</p>
+                </section>
+            </div>
+
+            <div>
+                <section class="card">
+                    <h2>Company</h2>
+                    <dl>
+                        <dt>Code</dt><dd><code th:text="${c.code}">CODE</code></dd>
+                        <dt>Type</dt><dd th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(c.type, '_', ' ')))}">Vendor</dd>
+                        <dt>Registered</dt><dd th:text="${c.registered} ?: '—'">date</dd>
+                        <dt>People</dt><dd><span th:text="${c.members}">0</span>, <span th:text="${c.pendingMembers}">0</span> waiting</dd>
+                        <dt th:if="${c.note}">Note</dt><dd th:if="${c.note}" th:text="${c.note}">note</dd>
+                    </dl>
+                </section>
+
+                <section class="card stack">
+                    <h2>Approval</h2>
+                    <form th:if="${c.status != 'APPROVED'}" th:action="@{/admin/companies/{id}/decision(id=${c.id})}" method="post">
+                        <input type="hidden" name="status" value="APPROVED">
+                        <label class="check"><input type="checkbox" name="includeMembers" value="true" checked>
+                            Also approve the <span th:text="${c.pendingMembers}">0</span> people waiting</label>
+                        <div><button type="submit" class="approve" th:text="${c.status == 'PENDING'} ? 'Approve company' : 'Reinstate company'">Approve</button></div>
+                    </form>
+                    <form th:if="${c.status == 'PENDING'}" th:action="@{/admin/companies/{id}/decision(id=${c.id})}" method="post">
+                        <input type="hidden" name="status" value="REJECTED">
+                        <label for="rejectNote">Reason for rejecting</label>
+                        <input id="rejectNote" name="note" required maxlength="300">
+                        <button type="submit" class="danger">Reject company</button>
+                    </form>
+                    <form th:if="${c.status == 'APPROVED'}" th:action="@{/admin/companies/{id}/decision(id=${c.id})}" method="post">
+                        <input type="hidden" name="status" value="SUSPENDED">
+                        <label for="suspendNote">Reason for suspending</label>
+                        <input id="suspendNote" name="note" required maxlength="300">
+                        <button type="submit" class="danger">Suspend company</button>
+                        <p class="hint">Suspending blocks everyone in the company until it is reinstated.</p>
+                    </form>
+                </section>
+
+                <section class="card" th:if="${showBilling}">
+                    <h2>Subscription</h2>
+                    <th:block th:if="${subscription != null}">
+                        <dl>
+                            <dt>Plan</dt><dd th:text="${subscription.plan}">Plan</dd>
+                            <dt>Monthly</dt><dd th:text="${subscription.monthlyPrice}">INR 0</dd>
+                            <dt>Standing</dt><dd><span th:replace="~{admin/_layout :: status(${subscription.standing})}"></span></dd>
+                            <dt>Paid until</dt><dd th:text="${subscription.paidUntil} ?: 'No payment yet'">date</dd>
+                        </dl>
+                        <a class="button primary" th:href="@{/admin/billing/subscriptions/{id}(id=${subscription.id})}">Record payment or manage</a>
+                    </th:block>
+                    <th:block th:if="${subscription == null}">
+                        <p class="muted">This company is not on a plan, so no payment is required of it.</p>
+                        <p class="muted" th:if="${planOptions.isEmpty()}">Create a plan for companies under <a th:href="@{/admin/billing/plans}">Plans</a> first.</p>
+                        <form th:unless="${planOptions.isEmpty()}" th:action="@{/admin/billing/subscriptions}" method="post">
+                            <input type="hidden" name="subject" th:value="'ORGANIZATION:' + ${c.id}">
+                            <label for="planId">Put on plan</label>
+                            <select id="planId" name="planId" required>
+                                <option th:each="o : ${planOptions}" th:value="${o.value}" th:text="${o.label}">Plan</option>
+                            </select>
+                            <button type="submit" class="primary">Start subscription</button>
+                            <p class="hint">Once on a plan, the company's access opens when its first payment is recorded.</p>
+                        </form>
+                    </th:block>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

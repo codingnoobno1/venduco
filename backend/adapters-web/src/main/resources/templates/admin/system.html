@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('System status')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('system')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>System status</h1>
+                <p class="lead">Whether each part of the platform is answering, checked when this page loaded.</p>
+            </div>
+            <div class="head-actions"><a class="button" th:href="@{/admin/system}">Check again</a></div>
+        </header>
+
+        <p class="notice success" th:if="${allOk}" role="status">Everything is answering.</p>
+        <p class="notice error" th:unless="${allOk}" role="alert">Something is not answering. See below.</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Part</th><th>State</th><th>Detail</th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${checks}">
+                    <td><strong th:text="${c.name}">Database</strong></td>
+                    <td><span class="pill ok" th:if="${c.ok}">Answering</span><span class="pill bad" th:unless="${c.ok}">Not answering</span></td>
+                    <td th:text="${c.detail}">detail</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="columns">
+            <section class="card">
+                <h2>Records</h2>
+                <dl>
+                    <th:block th:each="e : ${counts}">
+                        <dt th:text="${e.key}">Users</dt><dd th:text="${e.value}">0</dd>
+                    </th:block>
+                </dl>
+            </section>
+            <section class="card">
+                <h2>Server</h2>
+                <dl>
+                    <dt>Running for</dt><dd th:text="${uptime}">1 h</dd>
+                    <dt>Java</dt><dd th:text="${javaVersion}">21</dd>
+                    <dt>Memory</dt><dd th:text="${memory}">MB</dd>
+                    <dt>Processors</dt><dd th:text="${processors}">4</dd>
+                </dl>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

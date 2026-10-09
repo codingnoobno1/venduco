@@ -1,0 +1,25 @@
+# Local development overrides. Activated automatically by `./gradlew :core-service:bootRun`.
+# Never use this profile in production.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false  # local dev runs over plain HTTP
+
+spring:
+  thymeleaf:
+    cache: false
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-0123456789}
+    cookie-secure: false  # local dev runs over plain HTTP
+
+logging:
+  level:
+    com.vendorconnect: DEBUG
+    org.hibernate.SQL: DEBUG

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Subscriptions')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('billing')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Subscriptions</h1>
+                <p class="lead">A company or individual on a plan can use the platform only while the monthly amount is paid.
+                    Open a subscription to record a payment.</p>
+            </div>
+            <div class="head-actions">
+                <a class="button" th:href="@{/admin/billing/plans}">Plans</a>
+                <a class="button" th:href="@{/admin/billing/payments}">Payment ledger</a>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+        <p th:replace="~{admin/_layout :: paymentOff}"></p>
+
+        <div class="tiles">
+            <div class="tile"><span class="label">Monthly recurring</span><strong class="money" th:text="${recurring}">—</strong>
+                <span class="muted">from subscriptions with access</span></div>
+            <a class="tile" th:classappend="${attention > 0} ? 'warn' : 'ok'" th:href="@{/admin/billing(show='attention')}">
+                <span class="label">Need a payment</span><strong th:text="${attention}">0</strong>
+                <span class="muted">awaiting, in grace or overdue</span></a>
+            <a class="tile" th:classappend="${blocked > 0} ? 'bad' : 'ok'" th:href="@{/admin/billing(show='blocked')}">
+                <span class="label">Access closed</span><strong th:text="${blocked}">0</strong>
+                <span class="muted">unpaid, suspended or cancelled</span></a>
+        </div>
+
+        <nav class="tabs" aria-label="Filter subscriptions">
+            <a th:href="@{/admin/billing}" th:classappend="${show == 'all'} ? 'active'">All <span class="count" th:text="${total}">0</span></a>
+            <a th:href="@{/admin/billing(show='attention')}" th:classappend="${show == 'attention'} ? 'active'">Need a payment
+                <span class="count" th:text="${attention}">0</span></a>
+            <a th:href="@{/admin/billing(show='blocked')}" th:classappend="${show == 'blocked'} ? 'active'">Access closed
+                <span class="count" th:text="${blocked}">0</span></a>
+        </nav>
+
+        <div class="empty" th:if="${rows.isEmpty()}">
+            <strong th:text="${total == 0} ? 'Nobody is on a plan yet.' : 'Nothing in this view.'">Empty</strong>
+            <span th:if="${total == 0}">Start a subscription below. Until then no payment is required of anyone.</span>
+        </div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead><tr><th>Account</th><th>Plan</th><th class="num">Monthly</th><th>Standing</th><th>Paid until</th><th>Next due</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="s : ${rows}">
+                    <td><a th:href="@{/admin/billing/subscriptions/{id}(id=${s.id})}" th:text="${s.subject}">Account</a>
+                        <span class="sub" th:text="${s.subjectKind}">Company</span></td>
+                    <td th:text="${s.plan}">Plan</td>
+                    <td class="num" th:text="${s.monthlyPrice}">INR 0</td>
+                    <td><span th:replace="~{admin/_layout :: status(${s.standing})}"></span></td>
+                    <td class="nowrap" th:text="${s.paidUntil} ?: '—'">date</td>
+                    <td class="nowrap" th:text="${s.nextDueOn}">date</td>
+                    <td><a th:href="@{/admin/billing/subscriptions/{id}(id=${s.id})}">Record payment</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <section class="card narrow">
+            <h2>Start a subscription</h2>
+            <p class="muted" th:if="${planOptions.isEmpty()}">Create a plan under <a th:href="@{/admin/billing/plans}">Plans</a> first.</p>
+            <p class="muted" th:if="${!planOptions.isEmpty() and subjectOptions.isEmpty()}">Every company and individual is already on a plan.</p>
+            <form th:if="${!planOptions.isEmpty() and !subjectOptions.isEmpty()}" th:action="@{/admin/billing/subscriptions}" method="post">
+                <div class="row">
+                    <div>
+                        <label for="subject">Company or individual</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Choose…</option>
+                            <option th:each="o : ${subjectOptions}" th:value="${o.value}" th:text="${o.label}">Account</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="planId">Plan</label>
+                        <select id="planId" name="planId" required>
+                            <option value="">Choose…</option>
+                            <option th:each="o : ${planOptions}" th:value="${o.value}" th:text="${o.label}">Plan</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="primary">Start subscription</button>
+                <p class="hint">People who belong to a company are covered by the company's subscription, so only people without a company are listed.</p>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>

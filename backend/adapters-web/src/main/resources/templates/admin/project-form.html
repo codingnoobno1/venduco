@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head(${existing == null} ? 'New project' : 'Edit ' + ${existing.name})}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('projects')}"></aside>
+    <main>
+        <p class="crumbs"><a th:href="@{/admin/projects}">Projects</a> /
+            <a th:if="${existing != null}" th:href="@{/admin/projects/{id}(id=${existing.id})}" th:text="${existing.name}">Project</a>
+            <span th:if="${existing != null}">/</span></p>
+        <h1 th:text="${existing == null} ? 'New project' : 'Edit project'">New project</h1>
+        <p class="lead" th:if="${existing == null}">Create the project first; add its corridor sections and work packages on the project page.</p>
+        <p class="notice error" th:if="${error}" th:text="${error}" role="alert">Problem.</p>
+
+        <form class="card narrow" method="post"
+              th:action="${existing == null} ? @{/admin/projects} : @{/admin/projects/{id}(id=${existing.id})}">
+            <div class="row">
+                <div>
+                    <label for="name">Project name</label>
+                    <input id="name" name="name" th:value="${form.name}" required minlength="2" maxlength="160" placeholder="Metro Corridor A">
+                </div>
+                <div>
+                    <label for="corridorName">Corridor</label>
+                    <input id="corridorName" name="corridorName" th:value="${form.corridorName}" required minlength="2" maxlength="160"
+                           placeholder="Delhi – New Delhi">
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label for="organizationId">Owning company</label>
+                    <select id="organizationId" name="organizationId" required>
+                        <option value="">Choose a company</option>
+                        <option th:each="o : ${companyOptions}" th:value="${o.value}" th:text="${o.label}"
+                                th:selected="${o.value == form.organizationId}">Company</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="projectHeadId">Project head</label>
+                    <select id="projectHeadId" name="projectHeadId" required>
+                        <option value="">Choose a person</option>
+                        <option th:each="o : ${headOptions}" th:value="${o.value}" th:text="${o.label}"
+                                th:selected="${o.value == form.projectHeadId}">Person</option>
+                    </select>
+                </div>
+            </div>
+            <p class="hint">The project head is recorded on the project. To let them act on it, give them a Project Manager
+                assignment scoped to this project under <a th:href="@{/admin/assignments/new}">Assignments</a>.</p>
+
+            <div class="row">
+                <div>
+                    <label for="budget">Estimated budget (INR)</label>
+                    <input id="budget" name="budget" inputmode="decimal" th:value="${form.budget}" required placeholder="48500000000">
+                    <p class="hint">In rupees, without commas. ₹4,850 crore is 48500000000.</p>
+                </div>
+                <div>
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option th:each="s : ${statuses}" th:value="${s}" th:selected="${s == form.status}"
+                                th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(s, '_', ' ')))}">Planning</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="primary" th:text="${existing == null} ? 'Create project' : 'Save changes'">Create project</button>
+            <a th:href="${existing == null} ? @{/admin/projects} : @{/admin/projects/{id}(id=${existing.id})}">Cancel</a>
+        </form>
+    </main>
+</div>
+</body>
+</html>

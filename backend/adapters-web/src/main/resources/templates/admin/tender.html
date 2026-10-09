@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head(${tender.referenceNumber})}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('tenders')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <p class="crumbs"><a th:href="@{/admin/tenders}">Tenders</a> /</p>
+                <h1><span th:text="${tender.title}">Title</span> <span th:replace="~{admin/_layout :: status(${tender.status.name()})}"></span></h1>
+                <p class="lead"><span th:text="${tender.referenceNumber}">REF</span>
+                    <th:block th:if="${project != null}"> · <a th:href="@{/admin/projects/{id}(id=${project.id})}" th:text="${project.name}">Project</a></th:block></p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <div class="tiles">
+            <div class="tile quiet">
+                <span class="label">Estimated value</span>
+                <strong class="money" th:text="${value}">INR 0</strong>
+                <span class="muted">buyer's estimate</span>
+            </div>
+            <div class="tile quiet">
+                <span class="label">Bids close</span>
+                <strong class="money" th:text="${tender.closingDate} ?: 'Not set'">date</strong>
+                <span class="muted" th:if="${closingNote != null}" th:text="${closingNote}">note</span>
+                <span class="muted" th:if="${closingNote == null and tender.publishDate != null}" th:text="'published ' + ${tender.publishDate}">note</span>
+                <span class="muted" th:if="${closingNote == null and tender.publishDate == null}">not published</span>
+            </div>
+            <div class="tile quiet" th:if="${evaluation != null}">
+                <span class="label">Bids received</span>
+                <strong th:text="${evaluation.sealed} ? 'Sealed' : ${bids.size()}">0</strong>
+                <span class="muted" th:text="${evaluation.sealed} ? 'opened after closing' : 'submitted bids'">note</span>
+            </div>
+        </div>
+
+        <div class="columns">
+            <div>
+                <section class="card" th:if="${evaluation != null}">
+                    <h2>Bids</h2>
+                    <p class="notice warn" th:if="${evaluation.sealed}">Bids are sealed until the tender closes. Their number and amounts are
+                        not shown to anyone on the buyer's side before then.</p>
+                    <p class="muted" th:if="${!evaluation.sealed and bids.isEmpty()}">No bids were submitted.</p>
+                    <div class="table-wrap flat" th:if="${bids != null and !bids.isEmpty()}">
+                        <table>
+                            <thead><tr><th class="num">Rank</th><th>Bidder</th><th class="num">Amount</th><th class="num">vs estimate</th>
+                                <th class="num">vs lowest</th><th>Offer valid to</th><th>Qualification</th><th>Quotation</th></tr></thead>
+                            <tbody>
+                            <tr th:each="b : ${bids}" th:classappend="${b.awarded} ? 'highlight'">
+                                <td class="num" th:text="${b.rank}">1</td>
+                                <td><strong th:text="${b.bidder}">Bidder</strong> <span class="pill ok" th:if="${b.awarded}">Awarded</span>
+                                    <span class="sub" th:text="${b.isCompany} ? 'Company' : 'Individual'">Company</span>
+                                    <span class="sub" th:if="${b.note}" th:text="'“' + ${b.note} + '”'">note</span></td>
+                                <td class="num" th:text="${b.amount}">INR 0</td>
+                                <td class="num" th:text="${b.versusEstimate} ?: '—'">+2%</td>
+                                <td class="num" th:text="${b.versusLowest}">Lowest</td>
+                                <td class="nowrap"><span th:text="${b.validUntil} ?: '—'">date</span>
+                                    <span class="pill bad" th:if="${b.expired}">Expired</span></td>
+                                <td><th:block th:if="${b.qualification != null}"><span th:replace="~{admin/_layout :: status(${b.qualification})}"></span></th:block>
+                                    <span class="muted" th:if="${b.qualification == null}">None</span></td>
+                                <td><a th:if="${b.quotation != null}" th:href="@{/admin/tenders/{id}/bids/{bid}/quotation(id=${tender.id}, bid=${b.id})}"
+                                       th:text="${b.quotation}">file.pdf</a>
+                                    <span class="muted" th:if="${b.quotation == null}">—</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="card" th:if="${award != null}">
+                    <h2>Award</h2>
+                    <dl>
+                        <dt>Awarded to</dt><dd th:text="${award.bidder}">Bidder</dd>
+                        <dt>Decided by</dt><dd th:text="${award.by}">Person</dd>
+                        <dt>When</dt><dd th:text="${award.at}">date</dd>
+                        <dt>Reason</dt><dd th:text="${award.reason}">reason</dd>
+                    </dl>
+                </section>
+
+                <section class="card" th:if="${evaluation != null and award == null and bids != null and !bids.isEmpty()}">
+                    <h2>Award this tender</h2>
+                    <p class="muted" th:unless="${evaluation.canAward}" th:text="${evaluation.awardBlockedReason}">Blocked.</p>
+                    <form th:if="${evaluation.canAward}" th:action="@{/admin/tenders/{id}/award(id=${tender.id})}" method="post">
+                        <label for="bidId">Bid</label>
+                        <select id="bidId" name="bidId" required>
+                            <option th:each="b : ${bids}" th:value="${b.id}" th:disabled="${b.expired}"
+                                    th:text="${b.rank} + '. ' + ${b.bidder} + ' · ' + ${b.amount} + (${b.expired} ? ' (offer expired)' : '')">Bid</option>
+                        </select>
+                        <label for="reason">Reason</label>
+                        <textarea id="reason" name="reason" rows="3" required minlength="10" maxlength="1000"
+                                  placeholder="Why this bid is chosen. Required, and especially important when it is not the lowest."></textarea>
+                        <p class="hint">Awarding is final. It is recorded in the audit log, and the package's contractor is set to the winning company.</p>
+                        <button type="submit" class="approve">Award tender</button>
+                    </form>
+                </section>
+
+                <section class="card">
+                    <h2>Bill of quantities</h2>
+                    <p class="muted" th:if="${lines.isEmpty()}">No line items.</p>
+                    <div class="table-wrap flat" th:unless="${lines.isEmpty()}">
+                        <table>
+                            <thead><tr><th class="num">#</th><th>Description</th><th class="num">Quantity</th><th>Unit</th></tr></thead>
+                            <tbody>
+                            <tr th:each="l, i : ${lines}">
+                                <td class="num" th:text="${i.count}">1</td>
+                                <td th:text="${l.description}">item</td>
+                                <td class="num" th:text="${#numbers.formatInteger(l.quantity, 1, 'COMMA')}">1</td>
+                                <td th:text="${l.unit}">m3</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div>
+                <section class="card">
+                    <h2>Details</h2>
+                    <dl>
+                        <dt>Reference</dt><dd th:text="${tender.referenceNumber}">REF</dd>
+                        <dt>Project</dt><dd th:text="${project != null} ? ${project.name} : 'Unknown project'">Project</dd>
+                        <dt>Published</dt><dd th:text="${tender.publishDate} ?: 'Not published'">date</dd>
+                        <dt>Closes</dt><dd th:text="${tender.closingDate} ?: 'Not set'">date</dd>
+                        <dt>Stage</dt><dd th:text="${evaluation != null} ? ${#strings.capitalize(#strings.toLowerCase(evaluation.stage.name()))} : '—'">Open</dd>
+                    </dl>
+                    <p class="muted" th:if="${!canEvaluate}">Your role can see tenders but not compare bids.</p>
+                </section>
+
+                <section class="card" th:if="${!#strings.isEmpty(tender.description)}">
+                    <h2>Scope</h2>
+                    <p class="prewrap" th:text="${tender.description}">description</p>
+                </section>
+
+                <section class="card" th:if="${tender.aiAnalysis != null}">
+                    <h2>Automated review</h2>
+                    <dl>
+                        <dt>Risk score</dt><dd th:text="${#numbers.formatDecimal(tender.aiAnalysis.riskScore, 1, 2)}">0.2</dd>
+                    </dl>
+                    <ul class="plain">
+                        <li th:each="r : ${tender.aiAnalysis.recommendations}" th:text="${r}">recommendation</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('New assignment')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('assignments')}"></aside>
+    <main>
+        <p class="crumbs"><a th:href="@{/admin/assignments}">Assignments</a> /</p>
+        <h1>New assignment</h1>
+        <p class="notice error" th:if="${error}" th:text="${error}" role="alert">Problem.</p>
+
+        <form th:action="@{/admin/assignments}" method="post">
+            <h2>1. Who and which role</h2>
+            <label for="userId">User</label>
+            <select id="userId" name="userId" required>
+                <option value="">Choose…</option>
+                <option th:each="o : ${userOptions}" th:value="${o.value}" th:text="${o.label}"
+                        th:selected="${o.value == form.userId}">User</option>
+            </select>
+
+            <label for="roleId">Role</label>
+            <select id="roleId" name="roleId" required>
+                <option value="">Choose…</option>
+                <option th:each="o : ${roleOptions}" th:value="${o.value}" th:text="${o.label}"
+                        th:selected="${o.value == form.roleId}">Role</option>
+            </select>
+
+            <h2>2. Where it applies</h2>
+            <p class="hint">Fill in what the role's level needs. Organisation-level roles take an organisation and no
+                project. Project-level roles take a project. Discipline, package and section roles take a project plus
+                the items listed under "Limited to". A platform role takes neither.</p>
+            <div class="row">
+                <div>
+                    <label for="organizationId">Organisation</label>
+                    <select id="organizationId" name="organizationId">
+                        <option value="">None</option>
+                        <option th:each="o : ${organizationOptions}" th:value="${o.value}" th:text="${o.label}"
+                                th:selected="${o.value == form.organizationId}">Org</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="projectId">Project</label>
+                    <select id="projectId" name="projectId">
+                        <option value="">None</option>
+                        <option th:each="o : ${projectOptions}" th:value="${o.value}" th:text="${o.label}"
+                                th:selected="${o.value == form.projectId}">Project</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="scopeType">Limited to</label>
+                    <select id="scopeType" name="scopeType">
+                        <option th:each="s : ${scopeTypes}" th:value="${s}" th:selected="${s == form.scopeType}"
+                                th:text="${s == 'ALL'} ? 'Nothing narrower (all)' : ${#strings.toLowerCase(s)} + 's'">all</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="scopeRefs">Items <span class="muted">(comma separated)</span></label>
+                    <input id="scopeRefs" name="scopeRefs" th:value="${form.scopeRefs}" placeholder="CIVIL, SYSTEMS">
+                </div>
+            </div>
+            <p class="hint">For disciplines enter their keys, for example CIVIL. For packages or sections enter their ids.</p>
+
+            <h2>3. Limits</h2>
+            <div class="row">
+                <div>
+                    <label for="accessLevel">Access level</label>
+                    <select id="accessLevel" name="accessLevel">
+                        <option th:each="l : ${accessLevels}" th:value="${l}" th:text="${l}"
+                                th:selected="${l == form.accessLevel}">FULL</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="approvalLimit">Approval limit, ₹ <span class="muted">(optional)</span></label>
+                    <input id="approvalLimit" name="approvalLimit" inputmode="decimal" th:value="${form.approvalLimit}"
+                           placeholder="5000000">
+                </div>
+            </div>
+            <p class="hint">READ and COMMENT keep only the role's view permissions. EDIT adds changes but not approvals
+                or decisions. FULL is everything the role has.</p>
+
+            <label for="reviewerUserId">Reviewer for anything above the limit <span class="muted">(optional)</span></label>
+            <select id="reviewerUserId" name="reviewerUserId">
+                <option value="">None</option>
+                <option th:each="o : ${userOptions}" th:value="${o.value}" th:text="${o.label}"
+                        th:selected="${o.value == form.reviewerUserId}">User</option>
+            </select>
+
+            <div class="row">
+                <div>
+                    <label for="validFrom">Valid from</label>
+                    <input id="validFrom" name="validFrom" type="date" th:value="${form.validFrom}">
+                </div>
+                <div>
+                    <label for="validUntil">Valid until <span class="muted">(optional)</span></label>
+                    <input id="validUntil" name="validUntil" type="date" th:value="${form.validUntil}">
+                </div>
+            </div>
+
+            <button type="submit" class="primary">Create assignment</button>
+            <a th:href="@{/admin/assignments}">Cancel</a>
+        </form>
+    </main>
+</div>
+</body>
+</html>

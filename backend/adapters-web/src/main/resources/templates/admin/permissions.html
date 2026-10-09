@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Permissions')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('permissions')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Permissions</h1>
+                <p class="lead"><span th:text="${permissionCount}">0</span> permissions, and which of the
+                    <span th:text="${roleCount}">0</span> active roles hold each one. To change who holds a permission,
+                    open a role and edit it, or copy a built-in role first.</p>
+            </div>
+            <div class="head-actions"><a class="button primary" th:href="@{/admin/roles/new}">New role</a></div>
+        </header>
+
+        <section th:each="g : ${groups}">
+            <h2 th:text="${#strings.capitalize(g.resource)}">resource</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Permission</th><th>What it allows</th><th>Kind</th><th>Held by</th></tr></thead>
+                    <tbody>
+                    <tr th:each="h : ${g.permissions}">
+                        <td class="nowrap"><code th:text="${h.permission.key}">resource:action</code>
+                            <span class="tag sensitive" th:if="${h.permission.sensitive}">sensitive</span></td>
+                        <td th:text="${h.permission.description}">description</td>
+                        <td th:text="${#strings.capitalize(#strings.toLowerCase(h.permission.kind))}">Read</td>
+                        <td>
+                            <span class="muted" th:if="${h.roles.isEmpty()}">No role</span>
+                            <a class="perm" th:each="r : ${h.roles}" th:href="@{/admin/roles/{id}(id=${r.id})}" th:text="${r.name}">Role</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <p class="hint">Kind decides what an assignment's access level keeps: Read survives every level, Write needs EDIT or
+            FULL, Decide needs FULL.</p>
+    </main>
+</div>
+</body>
+</html>

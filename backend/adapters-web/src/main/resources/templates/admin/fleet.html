@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Fleet')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('fleet')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Fleet</h1>
+                <p class="lead">Plant and machinery registered by every vendor and company. Owners keep their own records up to date.</p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <div class="tiles">
+            <a class="tile quiet" th:href="@{/admin/fleet}">
+                <span class="label">Machines</span>
+                <strong th:text="${totalCount}">0</strong>
+                <span class="muted">from <span th:text="${ownerCount}">0</span> owners</span>
+            </a>
+            <a class="tile ok" th:href="@{/admin/fleet(status='AVAILABLE')}">
+                <span class="label">Available</span>
+                <strong th:text="${countByStatus.get('AVAILABLE')}">0</strong>
+                <span class="muted"><span th:text="${countByStatus.get('ASSIGNED')}">0</span> assigned to work</span>
+            </a>
+            <a class="tile" th:classappend="${countByStatus.get('MAINTENANCE') > 0} ? 'warn' : 'quiet'" th:href="@{/admin/fleet(status='MAINTENANCE')}">
+                <span class="label">In maintenance</span>
+                <strong th:text="${countByStatus.get('MAINTENANCE')}">0</strong>
+                <span class="muted">not available</span>
+            </a>
+            <a class="tile" th:classappend="${insuranceAttention > 0} ? 'bad' : 'quiet'" th:href="@{/admin/fleet(attention=true)}">
+                <span class="label">Insurance expired or expiring</span>
+                <strong th:text="${insuranceAttention}">0</strong>
+                <span class="muted">within 30 days</span>
+            </a>
+        </div>
+
+        <form class="toolbar" th:action="@{/admin/fleet}" method="get">
+            <label for="q" class="sr-only">Search</label>
+            <input id="q" name="q" type="search" placeholder="Code, type, owner or location" th:value="${q}">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">Any</option>
+                <option th:each="s : ${statuses}" th:value="${s}" th:selected="${s == status}"
+                        th:text="${#strings.capitalize(#strings.toLowerCase(s))}">Available</option>
+            </select>
+            <button type="submit">Apply</button>
+            <a th:if="${q != null or status != null or attention}" th:href="@{/admin/fleet}">Clear</a>
+        </form>
+
+        <div class="empty" th:if="${rows.isEmpty()}">
+            <strong th:text="${totalCount == 0} ? 'No machines registered yet.' : 'No machines match.'">No machines.</strong>
+        </div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead>
+                <tr><th>Machine</th><th>Owner</th><th>Location</th><th>Registration</th><th>Status</th><th>Insurance</th><th>Last maintenance</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${rows}">
+                    <td><strong th:text="${m.code}">EX-01</strong> <span th:if="${m.name}" th:text="${m.name}">name</span>
+                        <span class="sub" th:text="${m.type} + (${m.makeModel} != null ? ' · ' + ${m.makeModel} : '')">type</span></td>
+                    <td th:text="${m.owner}">owner</td>
+                    <td th:text="${m.location} ?: '—'">location</td>
+                    <td th:text="${m.registration} ?: '—'">reg</td>
+                    <td><span th:replace="~{admin/_layout :: status(${m.status})}"></span></td>
+                    <td class="nowrap"><span th:text="${m.insuranceExpiry} ?: 'Not recorded'" th:classappend="${m.insuranceExpiry == null} ? 'muted'">date</span>
+                        <span class="pill bad" th:if="${m.insuranceState == 'EXPIRED'}">Expired</span>
+                        <span class="pill warn" th:if="${m.insuranceState == 'EXPIRING'}">Expiring</span></td>
+                    <td class="nowrap" th:text="${m.lastMaintenance} ?: '—'">date</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

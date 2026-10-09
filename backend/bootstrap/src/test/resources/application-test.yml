@@ -1,0 +1,11 @@
+app:
+  jwt:
+    secret: test-only-secret-0123456789-abcdefghijklmnopqrstuvwxyz
+    cookie-secure: false
+  bootstrap:
+    admin-email: admin@test.local
+    admin-password: admin-test-password-123
+  storage:
+    local-path: build/test-uploads
+  admin:
+    port: 18081

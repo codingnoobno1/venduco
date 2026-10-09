@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head(${q.applicant})}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('qualifications')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <p class="crumbs"><a th:href="@{/admin/qualifications}">Qualifications</a> /</p>
+                <h1><span th:text="${q.applicant}">Applicant</span> <span th:replace="~{admin/_layout :: status(${q.status})}"></span></h1>
+                <p class="lead">Version <span th:text="${q.version}">1</span> ·
+                    <span th:text="${q.submitted != null} ? 'submitted ' + ${q.submitted} : 'not submitted yet'">submitted</span> ·
+                    <span th:text="${q.progress}">0 of 6</span> sections complete</p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+        <p class="notice warn" th:if="${reviewNote}"><strong>Note to the partner:</strong> <span th:text="${reviewNote}">note</span></p>
+
+        <div class="columns">
+            <div>
+                <section class="card" th:each="s : ${sections}">
+                    <h2><span th:text="${s.title}">Section</span>
+                        <span class="pill" th:classappend="${s.state == 'COMPLETED'} ? 'ok' : (${s.state == 'IN_PROGRESS'} ? 'warn' : 'off')"
+                              th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(s.state, '_', ' ')))}">Completed</span></h2>
+                    <dl>
+                        <th:block th:each="a : ${s.answers}">
+                            <dt th:text="${a.label}">Question</dt>
+                            <dd>
+                                <a th:if="${a.isDocument() and a.fileName != null}"
+                                   th:href="@{/admin/qualifications/{id}/documents/{f}(id=${q.id}, f=${a.fieldKey})}" th:text="${a.fileName}">file.pdf</a>
+                                <span th:if="${!a.isDocument() and a.value != null}" th:text="${a.value}">answer</span>
+                                <span class="pill bad" th:if="${!a.satisfied and a.required}">Missing</span>
+                                <span class="muted" th:if="${!a.satisfied and !a.required}">Not provided</span>
+                            </dd>
+                        </th:block>
+                    </dl>
+                </section>
+            </div>
+
+            <div>
+                <section class="card stack" th:if="${canDecide}">
+                    <h2>Decision</h2>
+                    <form th:action="@{/admin/qualifications/{id}/decision(id=${q.id})}" method="post">
+                        <input type="hidden" name="decision" value="APPROVED">
+                        <button type="submit" class="approve">Approve qualification</button>
+                    </form>
+                    <form th:action="@{/admin/qualifications/{id}/decision(id=${q.id})}" method="post">
+                        <input type="hidden" name="decision" value="CORRECTION_REQUIRED">
+                        <label for="correction">What needs correcting</label>
+                        <textarea id="correction" name="note" rows="3" required maxlength="500"></textarea>
+                        <button type="submit">Send back for correction</button>
+                        <p class="hint">The partner sees this note and can edit and resubmit.</p>
+                    </form>
+                    <form th:action="@{/admin/qualifications/{id}/decision(id=${q.id})}" method="post">
+                        <input type="hidden" name="decision" value="REJECTED">
+                        <label for="rejection">Reason for rejecting</label>
+                        <textarea id="rejection" name="note" rows="2" required maxlength="500"></textarea>
+                        <button type="submit" class="danger">Reject</button>
+                    </form>
+                </section>
+                <section class="card" th:unless="${canDecide}">
+                    <h2>Decision</h2>
+                    <p class="muted" th:if="${q.status == 'DRAFT' or q.status == 'CORRECTION_REQUIRED'}">The partner is still working on this. It can be decided once they submit it.</p>
+                    <p class="muted" th:if="${q.status == 'APPROVED' or q.status == 'REJECTED'}">This application has been decided.</p>
+                    <p class="muted" th:if="${q.status == 'SUBMITTED'}">You can read this application but not decide on it.</p>
+                </section>
+                <p class="hint">PAN and bank account numbers are shown masked.</p>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

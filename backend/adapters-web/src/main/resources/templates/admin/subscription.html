@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Subscription')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('billing')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <p class="crumbs"><a th:href="@{/admin/billing}">Subscriptions</a> /</p>
+                <h1><span th:text="${s.subject}">Account</span> <span th:replace="~{admin/_layout :: status(${s.standing})}"></span></h1>
+                <p class="lead">
+                    <span th:if="${s.allowsAccess}">Access is open.</span>
+                    <span th:if="${!s.allowsAccess and paymentEnforced}">Access is closed until this is put right.</span>
+                    <span th:if="${!s.allowsAccess and !paymentEnforced}">Access stays open while payment is not enforced.</span>
+                </p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+        <p th:replace="~{admin/_layout :: paymentOff}"></p>
+
+        <div class="columns">
+            <div>
+                <section class="card" th:unless="${cancelled}">
+                    <h2>Record a payment</h2>
+                    <p class="notice warn" th:if="${accountPending}">This account has not been approved yet. Recording the
+                        payment can approve it at the same time.</p>
+                    <p class="notice warn" th:if="${suspended}">The subscription is suspended. A payment is recorded and
+                        extends the paid period, but access stays closed until you resume it.</p>
+
+                    <form th:action="@{/admin/billing/subscriptions/{id}/payments(id=${s.id})}" method="post">
+                        <div class="row">
+                            <div>
+                                <label for="months">Months paid for</label>
+                                <select id="months" name="months">
+                                    <option th:each="q : ${quotes}" th:value="${q.months}"
+                                            th:text="${q.months} + (${q.months == 1} ? ' month · ' : ' months · ') + ${q.amount}">1 month</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="amount">Amount received</label>
+                                <input id="amount" name="amount" inputmode="decimal" required th:value="${monthlyInput}">
+                            </div>
+                        </div>
+                        <p class="hint">The amount must cover the months chosen. The period paid for starts on
+                            <strong th:text="${nextPeriodFrom}">date</strong>.</p>
+
+                        <div class="row">
+                            <div>
+                                <label for="method">How it was paid</label>
+                                <select id="method" name="method">
+                                    <option th:each="m : ${methods}" th:value="${m.value}" th:text="${m.label}">Bank transfer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="reference">Transaction reference</label>
+                                <input id="reference" name="reference" maxlength="120" placeholder="UTR, cheque no., gateway id">
+                            </div>
+                            <div>
+                                <label for="receivedOn">Received on</label>
+                                <input id="receivedOn" name="receivedOn" type="date" th:value="${today}" th:max="${today}">
+                            </div>
+                        </div>
+
+                        <label for="note">Note <span class="muted">(required for a waiver)</span></label>
+                        <input id="note" name="note" maxlength="300">
+
+                        <div th:if="${accountPending}">
+                            <label class="check"><input type="checkbox" name="approveAccount" value="true" checked>
+                                Approve the account now that it has paid</label>
+                        </div>
+
+                        <button type="submit" class="primary">Record payment</button>
+                    </form>
+                </section>
+
+                <section>
+                    <h2>Payments</h2>
+                    <p class="empty" th:if="${payments.isEmpty()}">No payments recorded yet.</p>
+                    <div class="table-wrap" th:unless="${payments.isEmpty()}">
+                        <table>
+                            <thead><tr><th>Received</th><th class="num">Amount</th><th>Method</th><th>Reference</th><th>Covers</th><th>Recorded by</th></tr></thead>
+                            <tbody>
+                            <tr th:each="p : ${payments}">
+                                <td class="nowrap" th:text="${p.receivedOn}">date</td>
+                                <td class="num" th:text="${p.amount}">INR 0</td>
+                                <td th:text="${p.method}">Bank transfer</td>
+                                <td><span th:text="${p.reference} ?: '—'">ref</span>
+                                    <span class="sub" th:if="${p.note}" th:text="${p.note}">note</span></td>
+                                <td class="nowrap" th:text="${p.period}">period</td>
+                                <td th:text="${p.recordedBy}">admin</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div>
+                <section class="card">
+                    <h2>Subscription</h2>
+                    <dl>
+                        <dt>Account</dt>
+                        <dd>
+                            <a th:if="${s.isCompany() and #sets.contains(perms, 'admin.approval:manage')}"
+                               th:href="@{/admin/companies/{id}(id=${s.subjectId})}" th:text="${s.subject}">Company</a>
+                            <span th:unless="${s.isCompany() and #sets.contains(perms, 'admin.approval:manage')}" th:text="${s.subject}">Account</span>
+                            <span class="sub" th:text="${s.subjectKind}">Company</span>
+                        </dd>
+                        <dt>Plan</dt><dd th:text="${s.plan}">Plan</dd>
+                        <dt>Monthly</dt><dd th:text="${s.monthlyPrice}">INR 0</dd>
+                        <dt>Started</dt><dd th:text="${startedOn}">date</dd>
+                        <dt>Paid until</dt><dd th:text="${s.paidUntil} ?: 'No payment yet'">date</dd>
+                        <dt>Next due</dt><dd th:text="${s.nextDueOn}">date</dd>
+                    </dl>
+                </section>
+
+                <section class="card" th:if="${!planOptions.isEmpty()}">
+                    <h2 th:text="${cancelled} ? 'Reopen on a plan' : 'Change plan'">Change plan</h2>
+                    <form th:action="@{/admin/billing/subscriptions}" method="post">
+                        <input type="hidden" name="subject" th:value="${subjectValue}">
+                        <label for="planId" class="sr-only">Plan</label>
+                        <select id="planId" name="planId">
+                            <option th:each="o : ${planOptions}" th:value="${o.value}" th:text="${o.label}"
+                                    th:selected="${o.value == currentPlanId}">Plan</option>
+                        </select>
+                        <button type="submit" th:text="${cancelled} ? 'Reopen subscription' : 'Change plan'">Change</button>
+                    </form>
+                    <p class="hint">What is already paid stays paid. The new price applies from the next payment.</p>
+                </section>
+
+                <section class="card danger-zone" th:unless="${cancelled}">
+                    <h2>Suspend or cancel</h2>
+                    <div class="actions">
+                        <form th:action="@{/admin/billing/subscriptions/{id}/status(id=${s.id})}" method="post">
+                            <input type="hidden" name="status" th:value="${suspended} ? 'ACTIVE' : 'SUSPENDED'">
+                            <button type="submit" th:text="${suspended} ? 'Resume' : 'Suspend'">Suspend</button>
+                        </form>
+                        <form th:action="@{/admin/billing/subscriptions/{id}/status(id=${s.id})}" method="post">
+                            <input type="hidden" name="status" value="CANCELLED">
+                            <button type="submit" class="danger">Cancel subscription</button>
+                        </form>
+                    </div>
+                    <p class="hint">While payment is enforced, both close access at once. A suspended subscription can be resumed; a cancelled one is
+                        reopened by putting the account on a plan again.</p>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

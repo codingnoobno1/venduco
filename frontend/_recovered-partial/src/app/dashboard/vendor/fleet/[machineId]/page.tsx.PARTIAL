@@ -1,0 +1,249 @@
+<<<< LINE 1 NOT RECOVERED >>>>
+<<<< LINE 2 NOT RECOVERED >>>>
+<<<< LINE 3 NOT RECOVERED >>>>
+<<<< LINE 4 NOT RECOVERED >>>>
+<<<< LINE 5 NOT RECOVERED >>>>
+<<<< LINE 6 NOT RECOVERED >>>>
+<<<< LINE 7 NOT RECOVERED >>>>
+<<<< LINE 8 NOT RECOVERED >>>>
+<<<< LINE 9 NOT RECOVERED >>>>
+<<<< LINE 10 NOT RECOVERED >>>>
+<<<< LINE 11 NOT RECOVERED >>>>
+<<<< LINE 12 NOT RECOVERED >>>>
+<<<< LINE 13 NOT RECOVERED >>>>
+<<<< LINE 14 NOT RECOVERED >>>>
+<<<< LINE 15 NOT RECOVERED >>>>
+<<<< LINE 16 NOT RECOVERED >>>>
+<<<< LINE 17 NOT RECOVERED >>>>
+<<<< LINE 18 NOT RECOVERED >>>>
+<<<< LINE 19 NOT RECOVERED >>>>
+<<<< LINE 20 NOT RECOVERED >>>>
+<<<< LINE 21 NOT RECOVERED >>>>
+<<<< LINE 22 NOT RECOVERED >>>>
+<<<< LINE 23 NOT RECOVERED >>>>
+<<<< LINE 24 NOT RECOVERED >>>>
+<<<< LINE 25 NOT RECOVERED >>>>
+<<<< LINE 26 NOT RECOVERED >>>>
+<<<< LINE 27 NOT RECOVERED >>>>
+<<<< LINE 28 NOT RECOVERED >>>>
+<<<< LINE 29 NOT RECOVERED >>>>
+    const [machine, setMachine] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState('overview')
+
+    useEffect(() => {
+        fetchMachine()
+    }, [machineId])
+
+    async function fetchMachine() {
+        try {
+            const res = await apiRequest<any>(`/machines/${machineId}`)
+            const data = res
+            if (data.success) {
+                setMachine(data.data)
+            } else {
+                router.push('/dashboard/vendor/fleet')
+            }
+        } catch (error) {
+            console.error('Failed to fetch machine:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    async function handleDelete() {
+        if (!confirm('Are you sure you want to delete this machine?')) return
+
+        try {
+            await secureFetch(`/api/machines/${machineId}`, {
+                method: 'DELETE'
+            })
+            router.push('/dashboard/vendor/fleet')
+        } catch (error) {
+            console.error('Failed to delete machine:', error)
+        }
+    }
+
+    if (loading) {
+        return <LoadingSkeleton type="card" count={3} />
+    }
+
+    if (!machine) {
+        return (
+            <div className="text-center py-12">
+                <p className="text-slate-500">Machine not found</p>
+            </div>
+        )
+    }
+
+    const tabs = [
+<<<< LINE 80 NOT RECOVERED >>>>
+<<<< LINE 81 NOT RECOVERED >>>>
+<<<< LINE 82 NOT RECOVERED >>>>
+<<<< LINE 83 NOT RECOVERED >>>>
+<<<< LINE 84 NOT RECOVERED >>>>
+<<<< LINE 85 NOT RECOVERED >>>>
+<<<< LINE 86 NOT RECOVERED >>>>
+<<<< LINE 87 NOT RECOVERED >>>>
+<<<< LINE 88 NOT RECOVERED >>>>
+<<<< LINE 89 NOT RECOVERED >>>>
+<<<< LINE 90 NOT RECOVERED >>>>
+<<<< LINE 91 NOT RECOVERED >>>>
+<<<< LINE 92 NOT RECOVERED >>>>
+<<<< LINE 93 NOT RECOVERED >>>>
+<<<< LINE 94 NOT RECOVERED >>>>
+<<<< LINE 95 NOT RECOVERED >>>>
+<<<< LINE 96 NOT RECOVERED >>>>
+<<<< LINE 97 NOT RECOVERED >>>>
+<<<< LINE 98 NOT RECOVERED >>>>
+<<<< LINE 99 NOT RECOVERED >>>>
+<<<< LINE 100 NOT RECOVERED >>>>
+<<<< LINE 101 NOT RECOVERED >>>>
+<<<< LINE 102 NOT RECOVERED >>>>
+<<<< LINE 103 NOT RECOVERED >>>>
+<<<< LINE 104 NOT RECOVERED >>>>
+<<<< LINE 105 NOT RECOVERED >>>>
+<<<< LINE 106 NOT RECOVERED >>>>
+<<<< LINE 107 NOT RECOVERED >>>>
+<<<< LINE 108 NOT RECOVERED >>>>
+<<<< LINE 109 NOT RECOVERED >>>>
+<<<< LINE 110 NOT RECOVERED >>>>
+<<<< LINE 111 NOT RECOVERED >>>>
+<<<< LINE 112 NOT RECOVERED >>>>
+<<<< LINE 113 NOT RECOVERED >>>>
+<<<< LINE 114 NOT RECOVERED >>>>
+<<<< LINE 115 NOT RECOVERED >>>>
+<<<< LINE 116 NOT RECOVERED >>>>
+<<<< LINE 117 NOT RECOVERED >>>>
+<<<< LINE 118 NOT RECOVERED >>>>
+<<<< LINE 119 NOT RECOVERED >>>>
+<<<< LINE 120 NOT RECOVERED >>>>
+<<<< LINE 121 NOT RECOVERED >>>>
+<<<< LINE 122 NOT RECOVERED >>>>
+<<<< LINE 123 NOT RECOVERED >>>>
+<<<< LINE 124 NOT RECOVERED >>>>
+<<<< LINE 125 NOT RECOVERED >>>>
+<<<< LINE 126 NOT RECOVERED >>>>
+<<<< LINE 127 NOT RECOVERED >>>>
+<<<< LINE 128 NOT RECOVERED >>>>
+<<<< LINE 129 NOT RECOVERED >>>>
+<<<< LINE 130 NOT RECOVERED >>>>
+<<<< LINE 131 NOT RECOVERED >>>>
+<<<< LINE 132 NOT RECOVERED >>>>
+<<<< LINE 133 NOT RECOVERED >>>>
+<<<< LINE 134 NOT RECOVERED >>>>
+<<<< LINE 135 NOT RECOVERED >>>>
+<<<< LINE 136 NOT RECOVERED >>>>
+<<<< LINE 137 NOT RECOVERED >>>>
+<<<< LINE 138 NOT RECOVERED >>>>
+<<<< LINE 139 NOT RECOVERED >>>>
+<<<< LINE 140 NOT RECOVERED >>>>
+<<<< LINE 141 NOT RECOVERED >>>>
+<<<< LINE 142 NOT RECOVERED >>>>
+<<<< LINE 143 NOT RECOVERED >>>>
+<<<< LINE 144 NOT RECOVERED >>>>
+<<<< LINE 145 NOT RECOVERED >>>>
+<<<< LINE 146 NOT RECOVERED >>>>
+<<<< LINE 147 NOT RECOVERED >>>>
+<<<< LINE 148 NOT RECOVERED >>>>
+<<<< LINE 149 NOT RECOVERED >>>>
+<<<< LINE 150 NOT RECOVERED >>>>
+<<<< LINE 151 NOT RECOVERED >>>>
+<<<< LINE 152 NOT RECOVERED >>>>
+<<<< LINE 153 NOT RECOVERED >>>>
+<<<< LINE 154 NOT RECOVERED >>>>
+<<<< LINE 155 NOT RECOVERED >>>>
+<<<< LINE 156 NOT RECOVERED >>>>
+<<<< LINE 157 NOT RECOVERED >>>>
+<<<< LINE 158 NOT RECOVERED >>>>
+<<<< LINE 159 NOT RECOVERED >>>>
+<<<< LINE 160 NOT RECOVERED >>>>
+<<<< LINE 161 NOT RECOVERED >>>>
+<<<< LINE 162 NOT RECOVERED >>>>
+<<<< LINE 163 NOT RECOVERED >>>>
+<<<< LINE 164 NOT RECOVERED >>>>
+<<<< LINE 165 NOT RECOVERED >>>>
+<<<< LINE 166 NOT RECOVERED >>>>
+<<<< LINE 167 NOT RECOVERED >>>>
+<<<< LINE 168 NOT RECOVERED >>>>
+<<<< LINE 169 NOT RECOVERED >>>>
+<<<< LINE 170 NOT RECOVERED >>>>
+<<<< LINE 171 NOT RECOVERED >>>>
+<<<< LINE 172 NOT RECOVERED >>>>
+<<<< LINE 173 NOT RECOVERED >>>>
+<<<< LINE 174 NOT RECOVERED >>>>
+<<<< LINE 175 NOT RECOVERED >>>>
+<<<< LINE 176 NOT RECOVERED >>>>
+<<<< LINE 177 NOT RECOVERED >>>>
+<<<< LINE 178 NOT RECOVERED >>>>
+<<<< LINE 179 NOT RECOVERED >>>>
+<<<< LINE 180 NOT RECOVERED >>>>
+<<<< LINE 181 NOT RECOVERED >>>>
+<<<< LINE 182 NOT RECOVERED >>>>
+<<<< LINE 183 NOT RECOVERED >>>>
+<<<< LINE 184 NOT RECOVERED >>>>
+<<<< LINE 185 NOT RECOVERED >>>>
+<<<< LINE 186 NOT RECOVERED >>>>
+<<<< LINE 187 NOT RECOVERED >>>>
+<<<< LINE 188 NOT RECOVERED >>>>
+<<<< LINE 189 NOT RECOVERED >>>>
+<<<< LINE 190 NOT RECOVERED >>>>
+<<<< LINE 191 NOT RECOVERED >>>>
+<<<< LINE 192 NOT RECOVERED >>>>
+<<<< LINE 193 NOT RECOVERED >>>>
+<<<< LINE 194 NOT RECOVERED >>>>
+<<<< LINE 195 NOT RECOVERED >>>>
+<<<< LINE 196 NOT RECOVERED >>>>
+<<<< LINE 197 NOT RECOVERED >>>>
+<<<< LINE 198 NOT RECOVERED >>>>
+<<<< LINE 199 NOT RECOVERED >>>>
+<<<< LINE 200 NOT RECOVERED >>>>
+<<<< LINE 201 NOT RECOVERED >>>>
+<<<< LINE 202 NOT RECOVERED >>>>
+<<<< LINE 203 NOT RECOVERED >>>>
+<<<< LINE 204 NOT RECOVERED >>>>
+<<<< LINE 205 NOT RECOVERED >>>>
+<<<< LINE 206 NOT RECOVERED >>>>
+<<<< LINE 207 NOT RECOVERED >>>>
+<<<< LINE 208 NOT RECOVERED >>>>
+<<<< LINE 209 NOT RECOVERED >>>>
+<<<< LINE 210 NOT RECOVERED >>>>
+<<<< LINE 211 NOT RECOVERED >>>>
+<<<< LINE 212 NOT RECOVERED >>>>
+<<<< LINE 213 NOT RECOVERED >>>>
+<<<< LINE 214 NOT RECOVERED >>>>
+<<<< LINE 215 NOT RECOVERED >>>>
+<<<< LINE 216 NOT RECOVERED >>>>
+<<<< LINE 217 NOT RECOVERED >>>>
+<<<< LINE 218 NOT RECOVERED >>>>
+<<<< LINE 219 NOT RECOVERED >>>>
+<<<< LINE 220 NOT RECOVERED >>>>
+<<<< LINE 221 NOT RECOVERED >>>>
+<<<< LINE 222 NOT RECOVERED >>>>
+<<<< LINE 223 NOT RECOVERED >>>>
+<<<< LINE 224 NOT RECOVERED >>>>
+<<<< LINE 225 NOT RECOVERED >>>>
+<<<< LINE 226 NOT RECOVERED >>>>
+<<<< LINE 227 NOT RECOVERED >>>>
+<<<< LINE 228 NOT RECOVERED >>>>
+<<<< LINE 229 NOT RECOVERED >>>>
+<<<< LINE 230 NOT RECOVERED >>>>
+<<<< LINE 231 NOT RECOVERED >>>>
+<<<< LINE 232 NOT RECOVERED >>>>
+<<<< LINE 233 NOT RECOVERED >>>>
+<<<< LINE 234 NOT RECOVERED >>>>
+<<<< LINE 235 NOT RECOVERED >>>>
+<<<< LINE 236 NOT RECOVERED >>>>
+<<<< LINE 237 NOT RECOVERED >>>>
+<<<< LINE 238 NOT RECOVERED >>>>
+<<<< LINE 239 NOT RECOVERED >>>>
+<<<< LINE 240 NOT RECOVERED >>>>
+<<<< LINE 241 NOT RECOVERED >>>>
+<<<< LINE 242 NOT RECOVERED >>>>
+<<<< LINE 243 NOT RECOVERED >>>>
+<<<< LINE 244 NOT RECOVERED >>>>
+<<<< LINE 245 NOT RECOVERED >>>>
+<<<< LINE 246 NOT RECOVERED >>>>
+<<<< LINE 247 NOT RECOVERED >>>>
+<<<< LINE 248 NOT RECOVERED >>>>
+<<<< LINE 249 NOT RECOVERED >>>>

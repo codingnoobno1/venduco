@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Tenders')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('tenders')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Tenders</h1>
+                <p class="lead">All tenders across projects. Bids stay sealed until a tender's closing date has passed.</p>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <div class="tiles">
+            <a class="tile ok" th:href="@{/admin/tenders(status='PUBLISHED')}">
+                <span class="label">Open for bidding</span>
+                <strong th:text="${openCount}">0</strong>
+                <span class="muted">published, not yet awarded</span>
+            </a>
+            <div class="tile" th:if="${canEvaluate}" th:classappend="${awaitingAward > 0} ? 'warn' : 'quiet'">
+                <span class="label">Closed, awaiting award</span>
+                <strong th:text="${awaitingAward}">0</strong>
+                <span class="muted">bids can be compared</span>
+            </div>
+            <a class="tile quiet" th:href="@{/admin/tenders(status='AWARDED')}">
+                <span class="label">Awarded</span>
+                <strong th:text="${awardedCount}">0</strong>
+                <span class="muted">of <span th:text="${totalCount}">0</span> tenders</span>
+            </a>
+            <a class="tile quiet" th:href="@{/admin/tenders(status='DRAFT')}">
+                <span class="label">Drafts</span>
+                <strong th:text="${draftCount}">0</strong>
+                <span class="muted">not published yet</span>
+            </a>
+        </div>
+
+        <form class="toolbar" th:action="@{/admin/tenders}" method="get">
+            <label for="q" class="sr-only">Search</label>
+            <input id="q" name="q" type="search" placeholder="Title or reference" th:value="${q}">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">Any</option>
+                <option th:each="s : ${statuses}" th:value="${s}" th:selected="${s == status}"
+                        th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(s, '_', ' ')))}">Draft</option>
+            </select>
+            <button type="submit">Apply</button>
+            <a th:if="${q != null or status != null}" th:href="@{/admin/tenders}">Clear</a>
+        </form>
+
+        <div class="empty" th:if="${rows.isEmpty()}">
+            <strong th:text="${totalCount == 0} ? 'No tenders yet.' : 'No tenders match.'">No tenders yet.</strong>
+        </div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead>
+                <tr><th>Tender</th><th>Project</th><th>Status</th><th class="num">Estimated value</th><th>Closes</th>
+                    <th class="num" th:if="${canEvaluate}">Bids</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="t : ${rows}">
+                    <td><a th:href="@{/admin/tenders/{id}(id=${t.id})}" th:text="${t.title}">Title</a>
+                        <span class="sub" th:text="${t.reference}">REF</span></td>
+                    <td><a th:href="@{/admin/projects/{id}(id=${t.projectId})}" th:text="${t.project}">Project</a></td>
+                    <td><span th:replace="~{admin/_layout :: status(${t.status})}"></span>
+                        <span class="sub" th:if="${t.stage == 'EVALUATION'}">Ready to award</span></td>
+                    <td class="num" th:text="${t.value}">INR 0</td>
+                    <td class="nowrap"><span th:text="${t.closing} ?: '—'">date</span>
+                        <span class="sub" th:if="${t.closingNote}" th:text="${t.closingNote}">3 days left</span></td>
+                    <td class="num" th:if="${canEvaluate}">
+                        <span th:if="${t.bids != null}" th:text="${t.bids}">0</span>
+                        <span class="muted" th:if="${t.bids == null and t.stage == 'OPEN'}" title="Sealed until the tender closes">Sealed</span>
+                        <span class="muted" th:if="${t.bids == null and t.stage != 'OPEN'}">—</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

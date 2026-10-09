@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head(${user.fullName})}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('users')}"></aside>
+    <main th:with="here=${'/admin/users/' + user.id}">
+        <header class="page-head">
+            <div>
+                <p class="crumbs"><a th:href="@{/admin/users}">Users</a> /</p>
+                <h1><span th:text="${user.fullName}">Name</span> <span th:replace="~{admin/_layout :: status(${user.approval})}"></span>
+                    <span class="pill bad" th:unless="${user.active}">Deactivated</span></h1>
+            </div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <div class="columns">
+            <div>
+                <section class="card" th:if="${assignments != null}">
+                    <h2>Assignments</h2>
+                    <p><a class="button" th:href="@{/admin/assignments/new(userId=${user.id})}">Add assignment</a></p>
+                    <p class="muted" th:if="${assignments.isEmpty()}">This user has no assignments.</p>
+                    <div class="table-wrap" th:unless="${assignments.isEmpty()}">
+                        <table>
+                            <thead><tr><th>Role</th><th>Where</th><th>Scope</th><th>Level</th><th>Valid until</th><th>State</th></tr></thead>
+                            <tbody>
+                            <tr th:each="a : ${assignments}">
+                                <td><a th:href="@{/admin/assignments/{id}(id=${a.id})}" th:text="${a.roleName}">Role</a></td>
+                                <td th:text="${a.where}">where</td>
+                                <td th:text="${a.scope}">scope</td>
+                                <td th:text="${a.accessLevel}">FULL</td>
+                                <td th:text="${a.validUntil} ?: 'No end date'">date</td>
+                                <td>
+                                    <span class="pill ok" th:if="${a.usable}">Working</span>
+                                    <span class="pill bad" th:if="${!a.usable and a.status == 'REVOKED'}">Revoked</span>
+                                    <span class="pill warn" th:if="${!a.usable and a.status == 'SUSPENDED'}">Suspended</span>
+                                    <span class="pill warn" th:if="${!a.usable and a.status == 'ACTIVE'}">Not in effect</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="card" th:if="${showBilling}">
+                    <h2>Subscription</h2>
+                    <th:block th:if="${subscription != null}">
+                        <dl>
+                            <dt>Plan</dt><dd th:text="${subscription.plan}">Plan</dd>
+                            <dt>Monthly</dt><dd th:text="${subscription.monthlyPrice}">INR 0</dd>
+                            <dt>Standing</dt><dd><span th:replace="~{admin/_layout :: status(${subscription.standing})}"></span></dd>
+                            <dt>Paid until</dt><dd th:text="${subscription.paidUntil} ?: 'No payment yet'">date</dd>
+                        </dl>
+                        <a class="button primary" th:href="@{/admin/billing/subscriptions/{id}(id=${subscription.id})}">Record payment or manage</a>
+                    </th:block>
+                    <th:block th:if="${subscription == null}">
+                        <p class="muted">This person is not on a plan, so no payment is required of them.</p>
+                        <p class="muted" th:if="${planOptions.isEmpty()}">Create a plan for individuals under <a th:href="@{/admin/billing/plans}">Plans</a> first.</p>
+                        <form th:unless="${planOptions.isEmpty()}" th:action="@{/admin/billing/subscriptions}" method="post">
+                            <input type="hidden" name="subject" th:value="'USER:' + ${user.id}">
+                            <label for="planId">Put on plan</label>
+                            <select id="planId" name="planId" required>
+                                <option th:each="o : ${planOptions}" th:value="${o.value}" th:text="${o.label}">Plan</option>
+                            </select>
+                            <button type="submit" class="primary">Start subscription</button>
+                        </form>
+                    </th:block>
+                </section>
+            </div>
+
+            <div>
+                <section class="card">
+                    <h2>Account</h2>
+                    <dl>
+                        <dt>Email</dt><dd th:text="${user.email}">email</dd>
+                        <dt>Company</dt>
+                        <dd>
+                            <a th:if="${user.companyId != null and canApprove}" th:href="@{/admin/companies/{id}(id=${user.companyId})}"
+                               th:text="${user.company} ?: 'Company'">Company</a>
+                            <span th:if="${user.companyId != null and !canApprove}" th:text="${user.company} ?: 'Company'">Company</span>
+                            <span class="muted" th:if="${user.companyId == null}">None (individual)</span>
+                        </dd>
+                        <dt>Base role</dt><dd><code th:text="${user.legacyRole}">VENDOR</code></dd>
+                        <dt th:if="${user.approvalNote}">Approval note</dt>
+                        <dd th:if="${user.approvalNote}" th:text="${user.approvalNote}">note</dd>
+                    </dl>
+                    <p class="muted" th:if="${user.isSelf()}">This is your own account. You cannot change your own role, status or approval.</p>
+                </section>
+
+                <section class="card stack" th:if="${canApprove and !user.isSelf()}">
+                    <h2>Approval</h2>
+                    <form th:if="${user.approval != 'APPROVED'}" th:action="@{/admin/people/{id}/decision(id=${user.id})}" method="post">
+                        <input type="hidden" name="status" value="APPROVED">
+                        <input type="hidden" name="returnTo" th:value="${here}">
+                        <button type="submit" class="approve" th:text="${user.approval == 'PENDING'} ? 'Approve' : 'Reinstate'">Approve</button>
+                    </form>
+                    <form th:if="${user.approval == 'PENDING' or user.approval == 'APPROVED'}" th:action="@{/admin/people/{id}/decision(id=${user.id})}" method="post">
+                        <input type="hidden" name="status" th:value="${user.approval == 'PENDING'} ? 'REJECTED' : 'SUSPENDED'">
+                        <input type="hidden" name="returnTo" th:value="${here}">
+                        <label for="note" th:text="${user.approval == 'PENDING'} ? 'Reason for rejecting' : 'Reason for suspending'">Reason</label>
+                        <input id="note" name="note" required maxlength="300">
+                        <button type="submit" class="danger" th:text="${user.approval == 'PENDING'} ? 'Reject' : 'Suspend'">Reject</button>
+                    </form>
+                </section>
+
+                <section class="card stack" th:unless="${user.isSelf()}">
+                    <h2>Sign-in and base role</h2>
+                    <form th:action="@{/admin/users/{id}/active(id=${user.id})}" method="post">
+                        <input type="hidden" name="active" th:value="${!user.active}">
+                        <button type="submit" th:classappend="${user.active} ? 'danger'"
+                                th:text="${user.active} ? 'Deactivate account' : 'Reactivate account'">Deactivate</button>
+                        <p class="hint">A deactivated account cannot sign in at all.</p>
+                    </form>
+                    <form th:action="@{/admin/users/{id}/role(id=${user.id})}" method="post">
+                        <label for="role">Base role</label>
+                        <select id="role" name="role">
+                            <option th:each="r : ${legacyRoles}" th:value="${r}" th:text="${r}"
+                                    th:selected="${r == user.legacyRole}">ROLE</option>
+                        </select>
+                        <button type="submit">Change base role</button>
+                        <p class="hint">Decides the workspace they land in and their default assignment.</p>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

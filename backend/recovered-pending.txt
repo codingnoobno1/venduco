@@ -1,0 +1,3 @@
+# module:path under src/<set>/kotlin. Recovered files left out of compilation; see build.gradle.kts.
+# From a session later than the copy the backend was taken from: it tests project structure endpoints whose
+# controller was recovered only in damaged form.

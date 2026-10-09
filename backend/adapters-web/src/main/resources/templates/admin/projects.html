@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Projects')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('projects')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Projects</h1>
+                <p class="lead">Every corridor project on the platform: who owns it, who runs it, and how its packages and tenders stand.</p>
+            </div>
+            <div class="head-actions" th:if="${canCreate}"><a class="button primary" th:href="@{/admin/projects/new}">New project</a></div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <div class="tiles">
+            <a class="tile quiet" th:href="@{/admin/projects}">
+                <span class="label">Projects</span>
+                <strong th:text="${totalCount}">0</strong>
+                <span class="muted">on the platform</span>
+            </a>
+            <a class="tile ok" th:href="@{/admin/projects(status='IN_PROGRESS')}">
+                <span class="label">In progress</span>
+                <strong th:text="${countByStatus.get('IN_PROGRESS')}">0</strong>
+                <span class="muted"><span th:text="${countByStatus.get('PLANNING')}">0</span> still in planning</span>
+            </a>
+            <a class="tile" th:classappend="${countByStatus.get('ON_HOLD') > 0} ? 'warn' : 'quiet'" th:href="@{/admin/projects(status='ON_HOLD')}">
+                <span class="label">On hold</span>
+                <strong th:text="${countByStatus.get('ON_HOLD')}">0</strong>
+                <span class="muted"><span th:text="${countByStatus.get('COMPLETED')}">0</span> completed</span>
+            </a>
+            <div class="tile quiet">
+                <span class="label">Estimated budget</span>
+                <strong class="money" th:text="${portfolioBudget}">—</strong>
+                <span class="muted">across all projects</span>
+            </div>
+        </div>
+
+        <form class="toolbar" th:action="@{/admin/projects}" method="get">
+            <label for="q" class="sr-only">Search</label>
+            <input id="q" name="q" type="search" placeholder="Project or corridor name" th:value="${q}">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">Any</option>
+                <option th:each="s : ${statuses}" th:value="${s}" th:selected="${s == status}"
+                        th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(s, '_', ' ')))}">Planning</option>
+            </select>
+            <button type="submit">Apply</button>
+            <a th:if="${q != null or status != null}" th:href="@{/admin/projects}">Clear</a>
+        </form>
+
+        <div class="empty" th:if="${rows.isEmpty()}">
+            <strong th:text="${totalCount == 0} ? 'No projects yet.' : 'No projects match.'">No projects yet.</strong>
+            <span th:if="${totalCount == 0 and canCreate}">Create the first one with <a th:href="@{/admin/projects/new}">New project</a>.</span>
+        </div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Project</th><th>Owner</th><th>Project head</th><th>Status</th>
+                    <th class="num">Budget</th><th class="num">Sections</th><th class="num">Packages</th><th class="num">Tenders</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${rows}">
+                    <td><a th:href="@{/admin/projects/{id}(id=${p.id})}" th:text="${p.name}">Name</a>
+                        <span class="sub" th:text="${p.corridor}">corridor</span></td>
+                    <td th:text="${p.company}">Company</td>
+                    <td th:text="${p.head}">Head</td>
+                    <td><span th:replace="~{admin/_layout :: status(${p.status})}"></span></td>
+                    <td class="num" th:text="${p.budget}">INR 0</td>
+                    <td class="num" th:text="${p.sections}">0</td>
+                    <td class="num">
+                        <span th:text="${p.packages}">0</span>
+                        <span class="sub bad-text" th:if="${p.delayedPackages > 0}" th:text="${p.delayedPackages} + ' delayed'">1 delayed</span>
+                    </td>
+                    <td class="num" th:text="${p.tenders}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

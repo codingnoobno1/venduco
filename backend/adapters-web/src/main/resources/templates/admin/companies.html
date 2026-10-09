@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Companies')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('companies')}"></aside>
+    <main>
+        <header class="page-head">
+            <div>
+                <h1>Companies</h1>
+                <p class="lead">Every organisation on the platform, with its approval and, where you can see billing, its subscription.</p>
+            </div>
+            <div class="head-actions"><a class="button primary" th:href="@{/admin/companies/new}">Add company</a></div>
+        </header>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <form class="toolbar" th:action="@{/admin/companies}" method="get">
+            <label for="q" class="sr-only">Search</label>
+            <input id="q" name="q" type="search" placeholder="Name or code" th:value="${q}">
+            <label for="status">Approval</label>
+            <select id="status" name="status">
+                <option value="">Any</option>
+                <option th:each="s : ${statuses}" th:value="${s}" th:selected="${s == status}"
+                        th:text="${#strings.capitalize(#strings.toLowerCase(s))}">Pending</option>
+            </select>
+            <button type="submit">Apply</button>
+            <a th:if="${q != null or status != null}" th:href="@{/admin/companies}">Clear</a>
+        </form>
+
+        <div class="empty" th:if="${rows.isEmpty()}"><strong>No companies match.</strong></div>
+        <div class="table-wrap" th:unless="${rows.isEmpty()}">
+            <table>
+                <thead>
+                <tr><th>Company</th><th>Type</th><th>People</th><th>Approval</th><th th:if="${showBilling}">Subscription</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${rows}">
+                    <td><a th:href="@{/admin/companies/{id}(id=${c.id})}" th:text="${c.name}">Company</a>
+                        <span class="sub"><code th:text="${c.code}">CODE</code></span></td>
+                    <td th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(c.type, '_', ' ')))}">Vendor</td>
+                    <td><span th:text="${c.members}">0</span>
+                        <span class="sub" th:if="${c.pendingMembers > 0}"><span th:text="${c.pendingMembers}">0</span> waiting</span></td>
+                    <td><span th:replace="~{admin/_layout :: status(${c.status})}"></span></td>
+                    <td th:if="${showBilling}">
+                        <th:block th:if="${c.standing != null}"><span th:replace="~{admin/_layout :: status(${c.standing})}"></span></th:block>
+                        <span class="muted" th:if="${c.standing == null}">Not on a plan</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

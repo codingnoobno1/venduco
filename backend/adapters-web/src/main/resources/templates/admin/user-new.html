@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Add user')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('users')}"></aside>
+    <main>
+        <p class="crumbs"><a th:href="@{/admin/users}">Users</a> /</p>
+        <h1>Add user</h1>
+        <p class="lead">An account you create is approved straight away. People who register themselves wait in Approvals.</p>
+        <p class="notice error" th:if="${error}" th:text="${error}" role="alert">Problem.</p>
+
+        <form class="card narrow" th:action="@{/admin/users}" method="post" autocomplete="off">
+            <div class="row">
+                <div>
+                    <label for="fullName">Full name</label>
+                    <input id="fullName" name="fullName" th:value="${form.fullName}" required maxlength="120">
+                </div>
+                <div>
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" th:value="${form.email}" required maxlength="254">
+                </div>
+            </div>
+
+            <label for="password">Initial password</label>
+            <input id="password" name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password">
+            <p class="hint">At least 12 characters. Give it to the person directly; it is not shown or sent anywhere.</p>
+
+            <div class="row">
+                <div>
+                    <label for="role">Base role</label>
+                    <select id="role" name="role">
+                        <option th:each="r : ${legacyRoles}" th:value="${r}" th:text="${r}" th:selected="${r == form.role}">VENDOR</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="organizationId">Company</label>
+                    <select id="organizationId" name="organizationId">
+                        <option value="">None (individual)</option>
+                        <option th:each="o : ${companyOptions}" th:value="${o.value}" th:text="${o.label}"
+                                th:selected="${o.value == form.organizationId}">Company</option>
+                    </select>
+                </div>
+            </div>
+            <p class="hint">The base role decides the workspace they land in and their default permissions. You can only
+                give a base role whose permissions you hold yourself. Add scoped project access afterwards with assignments.</p>
+
+            <button type="submit" class="primary">Create user</button>
+            <a th:href="@{/admin/users}">Cancel</a>
+        </form>
+    </main>
+</div>
+</body>
+</html>

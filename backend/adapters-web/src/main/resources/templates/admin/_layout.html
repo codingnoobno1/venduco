@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- Shared pieces of every admin page. Pages pull these in with th:replace. -->
+
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · VendorConnect Admin'">VendorConnect Admin</title>
+    <link rel="stylesheet" th:href="@{/admin/assets/admin.css}">
+</head>
+
+<body>
+
+<!-- Navigation. Sections and entries appear only for what the signed-in administrator may do;
+     the numbers are work waiting for somebody. -->
+<aside th:fragment="sidebar(active)" class="sidebar"
+       th:with="canApprove=${#sets.contains(perms, 'admin.approval:manage')},
+                canUsers=${#sets.contains(perms, 'admin.user:manage')},
+                canRoles=${#sets.contains(perms, 'admin.role:manage')},
+                canAssign=${#sets.contains(perms, 'admin.assignment:manage')},
+                canBill=${#sets.contains(perms, 'admin.billing:manage')},
+                canAudit=${#sets.contains(perms, 'admin.audit:read')},
+                canSettings=${#sets.contains(perms, 'admin.settings:manage')},
+                canQualify=${#sets.contains(perms, 'qualification:read')},
+                canProjects=${#sets.contains(perms, 'project:read')},
+                canTenders=${#sets.contains(perms, 'tender:read')},
+                canFleet=${#sets.contains(perms, 'fleet:read-all')}">
+    <a class="brand" th:href="@{/admin}">Vendor<span>Connect</span><small>Administration</small></a>
+
+    <nav aria-label="Admin sections">
+        <a th:href="@{/admin}" th:classappend="${active == 'overview'} ? 'active'">Overview</a>
+
+        <p class="nav-group" th:if="${canApprove or canUsers or canQualify}">Onboarding</p>
+        <a th:if="${canApprove}" th:href="@{/admin/approvals}" th:classappend="${active == 'approvals'} ? 'active'">
+            Approvals <span class="badge" th:if="${navPendingApprovals != null and navPendingApprovals > 0}"
+                            th:text="${navPendingApprovals}">3</span></a>
+        <a th:if="${canApprove}" th:href="@{/admin/companies}" th:classappend="${active == 'companies'} ? 'active'">Companies</a>
+        <a th:if="${canQualify}" th:href="@{/admin/qualifications}" th:classappend="${active == 'qualifications'} ? 'active'">
+            Qualifications <span class="badge" th:if="${navQualificationsWaiting != null and navQualificationsWaiting > 0}"
+                                 th:text="${navQualificationsWaiting}">1</span></a>
+        <a th:if="${canUsers}" th:href="@{/admin/users}" th:classappend="${active == 'users'} ? 'active'">Users</a>
+
+        <p class="nav-group" th:if="${canProjects or canTenders or canFleet}">Delivery</p>
+        <a th:if="${canProjects}" th:href="@{/admin/projects}" th:classappend="${active == 'projects'} ? 'active'">Projects</a>
+        <a th:if="${canTenders}" th:href="@{/admin/tenders}" th:classappend="${active == 'tenders'} ? 'active'">
+            Tenders <span class="badge warn" th:if="${navTendersAwaitingAward != null and navTendersAwaitingAward > 0}"
+                          th:text="${navTendersAwaitingAward}">1</span></a>
+        <a th:if="${canFleet}" th:href="@{/admin/fleet}" th:classappend="${active == 'fleet'} ? 'active'">Fleet</a>
+
+        <p class="nav-group" th:if="${canRoles or canAssign}">Access control</p>
+        <a th:if="${canRoles}" th:href="@{/admin/roles}" th:classappend="${active == 'roles'} ? 'active'">Roles</a>
+        <a th:if="${canRoles}" th:href="@{/admin/roles/permissions}" th:classappend="${active == 'permissions'} ? 'active'">Permissions</a>
+        <a th:if="${canAssign}" th:href="@{/admin/assignments}" th:classappend="${active == 'assignments'} ? 'active'">Assignments</a>
+
+        <p class="nav-group" th:if="${canBill}">Billing</p>
+        <a th:if="${canBill}" th:href="@{/admin/billing}" th:classappend="${active == 'billing'} ? 'active'">
+            Subscriptions <span class="badge warn" th:if="${navBillingAttention != null and navBillingAttention > 0}"
+                                th:text="${navBillingAttention}">2</span></a>
+        <a th:if="${canBill}" th:href="@{/admin/billing/plans}" th:classappend="${active == 'plans'} ? 'active'">Plans</a>
+        <a th:if="${canBill}" th:href="@{/admin/billing/payments}" th:classappend="${active == 'payments'} ? 'active'">Payments</a>
+
+        <p class="nav-group" th:if="${canAudit or canSettings}">Governance</p>
+        <a th:if="${canAudit}" th:href="@{/admin/audit}" th:classappend="${active == 'audit'} ? 'active'">Audit log</a>
+        <a th:if="${canSettings}" th:href="@{/admin/settings}" th:classappend="${active == 'settings'} ? 'active'">Settings</a>
+        <a th:if="${canSettings}" th:href="@{/admin/system}" th:classappend="${active == 'system'} ? 'active'">System status</a>
+    </nav>
+
+    <div class="who" th:if="${me != null}">
+        <strong th:text="${me.fullName}">Name</strong>
+        <span th:text="${me.email}">email</span>
+        <form th:action="@{/admin/logout}" method="post">
+            <button type="submit" class="link">Sign out</button>
+        </form>
+    </div>
+</aside>
+
+<!-- Shown on billing pages while enforcement is off, so recorded figures are not mistaken for blocked accounts. -->
+<p th:fragment="paymentOff" class="notice warn" th:if="${paymentEnforced == false}">
+    Payment is not enforced at the moment: subscriptions and payments are recorded here, but nobody is blocked
+    for not paying.
+    <a th:if="${#sets.contains(perms, 'admin.settings:manage')}" th:href="@{/admin/settings}">Change in Settings</a>
+</p>
+
+<div th:fragment="flash">
+    <p class="notice success" th:if="${flashSuccess}" th:text="${flashSuccess}" role="status">Saved.</p>
+    <p class="notice error" th:if="${flashError}" th:text="${flashError}" role="alert">Refused.</p>
+</div>
+
+<!-- One place that decides how a status looks. Used for approval, subscription and payment states alike.
+     .get(value), not [value]: inside [] SpEL reads a bare name as the literal key "value". -->
+<span th:fragment="status(value)" class="pill"
+      th:classappend="${ {'APPROVED':'ok','PAID':'ok','ACTIVE':'ok','COMPLETED':'ok','AWARDED':'ok','AVAILABLE':'ok',
+                          'PENDING':'warn','GRACE':'warn','AWAITING_PAYMENT':'warn','ON_HOLD':'warn','AT_RISK':'warn',
+                          'MAINTENANCE':'warn','UNDER_REVIEW':'warn','CLOSED':'warn','SUBMITTED':'warn','CORRECTION_REQUIRED':'warn',
+                          'IN_PROGRESS':'info','MOBILIZATION':'info','PUBLISHED':'info','ASSIGNED':'info',
+                          'REJECTED':'bad','OVERDUE':'bad','SUSPENDED':'bad','DELAYED':'bad',
+                          'CANCELLED':'off','PLANNING':'off','NOT_STARTED':'off','DRAFT':'off'}.get(value) }"
+      th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(value, '_', ' ')))}">Status</span>
+
+</body>
+</html>

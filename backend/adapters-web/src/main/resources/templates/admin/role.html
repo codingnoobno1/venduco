@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head(${role.name})}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('roles')}"></aside>
+    <main>
+        <p class="crumbs"><a th:href="@{/admin/roles}">Roles</a> /</p>
+        <h1><span th:text="${role.name}">Role</span>
+            <span class="tag" th:if="${role.isSystem()}">Built-in</span>
+            <span class="tag custom" th:unless="${role.isSystem()}">Custom</span></h1>
+        <div th:replace="~{admin/_layout :: flash}"></div>
+
+        <dl class="facts">
+            <dt>Key</dt><dd><code th:text="${role.key}">KEY</code></dd>
+            <dt>Portal</dt><dd th:text="${role.portal}">BUYER</dd>
+            <dt>Assigned at</dt><dd th:text="${#strings.toLowerCase(role.scopeLevel)} + ' level'">project level</dd>
+        </dl>
+
+        <!-- Built-in role: read-only view plus the copy form. -->
+        <th:block th:if="${role.isSystem()}">
+            <p th:text="${role.description}">Description</p>
+
+            <section class="card">
+                <h2>Make a copy to customise</h2>
+                <form th:action="@{/admin/roles/{id}/clone(id=${role.id})}" method="post" class="inline">
+                    <label for="cloneKey">Key</label>
+                    <input id="cloneKey" name="key" th:value="${cloneKey}" required pattern="[A-Za-z][A-Za-z0-9_]{2,48}">
+                    <label for="cloneName">Name</label>
+                    <input id="cloneName" name="name" th:value="${role.name} + ' (copy)'" required maxlength="80">
+                    <button type="submit">Create copy</button>
+                </form>
+            </section>
+
+            <h2>Permissions</h2>
+            <table class="grid">
+                <tbody>
+                <tr th:each="g : ${groups}">
+                    <th th:text="${g.resource}">resource</th>
+                    <td>
+                        <span th:each="p : ${g.permissions}" class="perm"
+                              th:classappend="${#sets.contains(role.permissions, p.key)} ? 'on' : 'off'"
+                              th:title="${p.description}" th:text="${p.action}">read</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </th:block>
+
+        <!-- Custom role: editable. -->
+        <th:block th:unless="${role.isSystem()}">
+            <form th:action="@{/admin/roles/{id}(id=${role.id})}" method="post">
+                <label for="name">Name</label>
+                <input id="name" name="name" th:value="${role.name}" required maxlength="80">
+
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="2" maxlength="300" th:text="${role.description}"></textarea>
+
+                <label for="dashboard">Default dashboard key <span class="muted">(optional)</span></label>
+                <input id="dashboard" name="defaultDashboardKey" th:value="${role.defaultDashboardKey}" maxlength="80">
+
+                <label class="check"><input type="checkbox" name="active" value="true" th:checked="${role.isActive()}">
+                    Active <span class="muted">(an inactive role grants nothing to its holders)</span></label>
+
+                <h2>Permissions</h2>
+                <table class="grid">
+                    <tbody>
+                    <tr th:each="g : ${groups}">
+                        <th th:text="${g.resource}">resource</th>
+                        <td>
+                            <label th:each="p : ${g.permissions}" class="check" th:title="${p.description}">
+                                <input type="checkbox" name="permissions" th:value="${p.key}"
+                                       th:checked="${#sets.contains(role.permissions, p.key)}">
+                                <span th:text="${p.action}">read</span>
+                                <span class="tag sensitive" th:if="${p.sensitive}">sensitive</span>
+                            </label>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <button type="submit" class="primary">Save role</button>
+            </form>
+
+            <section class="card danger-zone">
+                <h2>Remove role</h2>
+                <p class="muted">A role that is still assigned cannot be removed. End its assignments first, or clear
+                    "Active" above.</p>
+                <form th:action="@{/admin/roles/{id}/delete(id=${role.id})}" method="post">
+                    <button type="submit" class="danger">Remove this role</button>
+                </form>
+            </section>
+        </th:block>
+
+        <p><a th:href="@{/admin/assignments(roleId=${role.id})}">Who holds this role</a></p>
+    </main>
+</div>
+</body>
+</html>

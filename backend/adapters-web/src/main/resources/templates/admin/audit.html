@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/_layout :: head('Audit log')}"></head>
+<body>
+<div class="shell">
+    <aside th:replace="~{admin/_layout :: sidebar('audit')}"></aside>
+    <main>
+        <h1>Audit log</h1>
+        <p class="muted">Changes to users, roles and assignments. Entries cannot be edited or removed.</p>
+
+        <form class="toolbar" th:action="@{/admin/audit}" method="get">
+            <label for="entityType">About</label>
+            <select id="entityType" name="entityType">
+                <option value="">Everything</option>
+                <option th:each="t : ${entityTypes}" th:value="${t}" th:selected="${t == entityType}"
+                        th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(t, '_', ' ')))}">User</option>
+            </select>
+            <input type="hidden" name="actor" th:if="${actor != null}" th:value="${actor}">
+            <button type="submit">Apply</button>
+            <a th:if="${actor != null or entityType != null}" th:href="@{/admin/audit}">Clear filters</a>
+        </form>
+
+        <p class="muted" th:if="${rows.isEmpty()}">No entries.</p>
+        <table th:unless="${rows.isEmpty()}">
+            <thead><tr><th>When</th><th>Who</th><th>Action</th><th>About</th><th>Detail</th></tr></thead>
+            <tbody>
+            <tr th:each="r : ${rows}">
+                <td class="nowrap" th:text="${r.at}">time</td>
+                <td th:text="${r.actor}">actor</td>
+                <td><code th:text="${r.action}">ACTION</code></td>
+                <td th:text="${#strings.toLowerCase(#strings.replace(r.entityType, '_', ' '))}">role</td>
+                <td th:text="${r.summary}">summary</td>
+            </tr>
+            </tbody>
+        </table>
+        <p class="muted" th:if="${rows.size() == limit}">Showing the latest <span th:text="${limit}">200</span> entries.</p>
+    </main>
+</div>
+</body>
+</html>
